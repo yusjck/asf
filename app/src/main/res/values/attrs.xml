@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="icon" format="reference"/>
+    <attr name="title" format="reference"/>
+
+    <declare-styleable name="DrawerMenuGroup">
+        <attr name="title"/>
+    </declare-styleable>
+
+    <declare-styleable name="DrawerMenuItem">
+        <attr name="icon"/>
+        <attr name="title"/>
+        <attr name="menu_type" format="enum">
+            <enum name="type_button" value="0"/>
+            <enum name="type_switch" value="1"/>
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="IconButton">
+        <attr name="icon"/>
+        <attr name="text" format="reference"/>
+    </declare-styleable>
+</resources>

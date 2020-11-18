@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+    <LinearLayout
+            android:id="@+id/ll_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_floating_menu_right"
+            android:layoutDirection="rtl">
+
+        <ImageView
+                android:id="@+id/iv_start"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:src="@drawable/ic_start" />
+
+        <ImageView
+                android:id="@+id/iv_stop"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:src="@drawable/ic_stop" />
+
+        <ImageView
+                android:id="@+id/iv_setting"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:src="@drawable/ic_script_setting" />
+
+        <ImageView
+                android:id="@+id/iv_close"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:scaleX="0.8"
+                android:scaleY="0.8"
+                android:src="@drawable/ic_close" />
+
+    </LinearLayout>
+
+</LinearLayout>

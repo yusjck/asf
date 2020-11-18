@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <SwitchPreference
+            android:defaultValue="false"
+            android:key="volume_key_control"
+            android:summary="启动脚本(音量-)，停止脚本(音量+)"
+            android:title="音量键控制" />
+    <SwitchPreference
+            android:defaultValue="true"
+            android:icon="@drawable/ic_shake"
+            android:key="stop_when_waggling"
+            android:title="摇一摇停止脚本" />
+    <SwitchPreference
+            android:defaultValue="true"
+            android:key="stop_when_calling"
+            android:title="来电停止脚本" />
+    <SwitchPreference
+            android:defaultValue="true"
+            android:icon="@drawable/ic_vibration"
+            android:key="vibrate_when_start"
+            android:title="启动脚本时震动" />
+    <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_root"
+            android:key="run_by_root"
+            android:summary="Android 7.0以前的系统需要ROOT权限才能进行触控模拟"
+            android:title="以ROOT权限运行" />
+    <SwitchPreference
+            android:defaultValue="true"
+            android:enabled="false"
+            android:key="backgroud_white_list"
+            android:summary="将脚本大师添加到系统的后台白名单中以防止因进程被杀导致无法执行脚本运行计划"
+            android:title="添加后台白名单" />
+    <PreferenceCategory android:title="远程控制">
+        <SwitchPreference
+                android:defaultValue="false"
+                android:icon="@drawable/ic_remote_control"
+                android:key="enable_cmd_server"
+                android:summary="允许外部设备通过网络远程控制本机，用于脚本开发或群控"
+                android:title="开启远程控制" />
+        <SwitchPreference
+                android:defaultValue="true"
+                android:key="enable_accesss_authorization"
+                android:summary="当有外部设备请求控制本机时是否需要向用户申请授权"
+                android:title="开启控制授权" />
+        <Preference
+                android:key="show_authorized_devices"
+                android:title="查看已授权设备" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="关于">
+        <Preference
+                android:icon="@drawable/ic_about"
+                android:key="about_app"
+                android:title="关于脚本大师" />
+    </PreferenceCategory>
+</PreferenceScreen>

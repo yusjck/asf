@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+            android:icon="@drawable/ic_note_add_black_24dp"
+            android:title="@string/action_add_script"
+            app:showAsAction="always">
+        <menu>
+            <item
+                    android:id="@+id/action_download_script"
+                    android:title="@string/action_download_script" />
+            <item
+                    android:id="@+id/action_import_script"
+                    android:title="@string/action_import_script" />
+        </menu>
+    </item>
+    <item
+            android:id="@+id/action_show_logs"
+            android:icon="@drawable/ic_event_note_black_24dp"
+            android:title="@string/action_show_log"
+            app:showAsAction="always" />
+</menu>

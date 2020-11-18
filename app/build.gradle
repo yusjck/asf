@@ -1,0 +1,65 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+        release {
+            storeFile file('E:\\Projects\\asf\\sign.jks')
+            storePassword '123123'
+            keyAlias = 'key0'
+            keyPassword '123123'
+        }
+        debug {
+            storeFile file('E:\\Projects\\asf\\sign.jks')
+            storePassword '123123'
+            keyAlias = 'key0'
+            keyPassword '123123'
+        }
+    }
+    compileSdkVersion 29
+    defaultConfig {
+        applicationId "com.rainman.asf"
+        minSdkVersion 19
+        targetSdkVersion 29
+        versionCode 5
+        versionName "1.5.0"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        externalNativeBuild {
+            cmake {
+                cFlags "-fvisibility=hidden"
+                cppFlags "-fvisibility=hidden"
+            }
+        }
+        ndk {
+            abiFilters 'armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'org.xutils:xutils:3.6.12'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'androidx.room:room-runtime:2.2.5'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    annotationProcessor 'androidx.room:room-compiler:2.2.5'
+    testImplementation 'junit:junit:4.13'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+}

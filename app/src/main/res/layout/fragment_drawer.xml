@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFF"
+        android:orientation="vertical">
+
+    <ScrollView
+            android:id="@+id/drawer_menu"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:background="@drawable/bg_drawer_head" />
+
+            <com.rainman.asf.view.DrawerMenuGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:menu_type="type_switch"
+                    app:title="@string/app_permission" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/request_accessibility"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_accessibility"
+                    app:menu_type="type_switch"
+                    app:title="@string/accessibility_service" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/request_screen_capture"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_screen_capture"
+                    app:menu_type="type_switch"
+                    app:title="@string/screen_capture_service" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/request_draw_overlay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_draw_overlay"
+                    app:menu_type="type_switch"
+                    app:title="@string/draw_overlay" />
+
+            <com.rainman.asf.view.DrawerMenuGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:title="@string/drawer_shortcut" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/switch_to_script_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_script"
+                    app:title="@string/action_show_script" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/switch_to_log_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_log"
+                    app:title="@string/action_show_log" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/switch_to_scheduler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_scheduler"
+                    app:title="@string/action_show_scheduler" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/floating_window_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_floating_window"
+                    app:menu_type="type_switch"
+                    app:title="@string/floating_window" />
+
+            <com.rainman.asf.view.DrawerMenuItem
+                    android:id="@+id/remote_control_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/ic_remote_control"
+                    app:menu_type="type_switch"
+                    app:title="@string/remote_control" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#CCC" />
+
+    <LinearLayout
+            android:id="@+id/drawer_footbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <com.rainman.asf.view.IconButton
+                android:id="@+id/app_setting"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:icon="@drawable/ic_settings_black_24dp"
+                app:text="@string/setting" />
+
+        <com.rainman.asf.view.IconButton
+                android:id="@+id/app_exit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:icon="@drawable/ic_exit_to_app_black_24dp"
+                app:text="@string/exit" />
+
+    </LinearLayout>
+</LinearLayout>

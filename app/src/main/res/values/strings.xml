@@ -1,0 +1,185 @@
+<resources>
+    <string name="app_name">脚本大师</string>
+    <string name="script_prompt">脚本提示</string>
+    <string name="dlg_confirm">确定</string>
+    <string name="dlg_cancel">取消</string>
+    <string name="accessibility_service_desc">脚本需要使用该功能来完成对本设备的控制，为了使脚本能正常运作，请确保该功能处于开启状态</string>
+    <string name="script_option">脚本选项</string>
+    <string name="script_log">脚本日志</string>
+    <string name="navigation_drawer_open">打开侧拉菜单</string>
+    <string name="navigation_drawer_close">关闭侧拉菜单</string>
+    <string name="start_script">启动</string>
+    <string name="stop_script">停止</string>
+    <string name="script_state_ready">请选择一个脚本</string>
+    <string name="script_state_starting">启动中</string>
+    <string name="script_state_running">运行中</string>
+    <string name="script_state_stopping">停止中</string>
+    <string name="script_state_stopped">已停止</string>
+    <string name="script_state_alerting">报警中</string>
+    <string name="script_state_blocking">阻塞中</string>
+    <string name="script_state_suspending">暂停中</string>
+    <string name="script_state_reseting">重启中</string>
+    <string name="script_state_unknown">未知状态</string>
+    <string name="script_state_exception">脚本异常</string>
+    <string name="script_list">脚本列表</string>
+    <string name="app_setting">应用设置</string>
+    <string name="script_scheduler">脚本运行计划</string>
+    <string name="add_scheduler">添加计划</string>
+    <string name="edit_scheduler">编辑计划</string>
+    <string name="scheduler_service">计划服务</string>
+    <string name="download_script">下载脚本</string>
+    <string name="no_scripts_available">没有可用脚本，请点击右上角添加</string>
+    <string name="visitor_manage">授权管理</string>
+    <string name="engine_connected">脚本引擎已连接</string>
+    <string name="engine_disconnected">脚本引擎已断开</string>
+    <string name="engine_connection_fail">连接脚本引擎失败</string>
+    <string name="engine_connection_lose">脚本引擎意外断开</string>
+    <string name="action_save">保存</string>
+    <string name="action_clear_log">清空日志</string>
+    <string name="action_delete">删除</string>
+    <string name="action_update">更新</string>
+    <string name="action_help">帮助</string>
+    <string name="action_add_script">添加脚本</string>
+    <string name="action_download_script">下载脚本</string>
+    <string name="action_import_script">从本地导入脚本</string>
+    <string name="repeat">重复</string>
+    <string name="script">脚本</string>
+    <string name="app_version_name">版本名称</string>
+    <string name="app_permission">应用权限</string>
+    <string name="accessibility_service">无障碍服务</string>
+    <string name="screen_capture_service">屏幕捕获服务</string>
+    <string name="draw_overlay">顶层显示</string>
+    <string name="drawer_shortcut">常用功能</string>
+    <string name="action_show_script">查看脚本</string>
+    <string name="action_show_log">查看日志</string>
+    <string name="action_show_scheduler">查看计划</string>
+    <string name="floating_window">悬浮窗</string>
+    <string name="remote_control">远程控制</string>
+    <string name="setting">设置</string>
+    <string name="exit">退出</string>
+    <string name="no_options_available">该脚本无可用选项</string>
+    <string name="script_name">脚本名称</string>
+    <string name="script_version">版本号</string>
+    <string name="action_download">下载</string>
+    <string name="script_desc">脚本描述</string>
+    <string name="last_run_time">上一次运行</string>
+    <string name="device_name">设备名称</string>
+    <string name="device_signature">设备签名</string>
+    <string name="action_add">添加</string>
+    <string name="authorized_devices_desc">已允许 %d 台，已禁止 %d 台</string>
+    <string name="scheduler_repeat_desc1">| %d小时%d分钟后启动</string>
+    <string name="scheduler_repeat_desc2">| %d分钟后启动</string>
+    <string name="scheduler_repeat_desc3">| 未开启</string>
+    <string name="group_name">组名</string>
+    <string name="item_name">项名</string>
+    <string name="button_name">按钮</string>
+    <string name="get_download_list_failed">请求数据失败</string>
+    <string name="import_script_failed">导入脚本失败</string>
+    <string name="import_script_successful">脚本导入完成</string>
+    <string name="update_script_failed">更新脚本失败</string>
+    <string name="update_script_successful">脚本更新完成</string>
+    <string name="download_script_failed">下载失败</string>
+    <string name="downloading">正在下载中…</string>
+    <string name="request_permission_prompt"><![CDATA[脚本运行需要访问 “电话”、“外部存储器”、“位置信息”，请到 “应用信息 -> 权限” 中授予！]]></string>
+    <string name="dlg_manual_authorization">去手动授权</string>
+    <string name="run_script_prompt">请先选择要运行的脚本</string>
+    <string name="dlg_retry">重试</string>
+    <string name="connect_engine_failed_prompt">连接脚本引擎失败，是否重试？</string>
+    <string name="option_saved">选项已保存</string>
+    <string name="no_script_selected">未选择脚本</string>
+    <string name="select_a_script">请选择脚本</string>
+    <string name="dlg_go_to_open">前往开启</string>
+    <string name="dlg_propmt">提示</string>
+    <string name="request_accessibility_prompt">脚本需要通用无障碍服务来对设备进行控制，即将跳转到功能开启页面</string>
+    <string name="system_function_not_supported">当前系统不支持手势模拟功能</string>
+    <string name="screen_capture_permission_denied">未取得屏幕捕获权限，部分功能将无法使用</string>
+    <string name="draw_overlay_permission_denied">未取得顶层显示权限，部分功能将受到影响</string>
+    <string name="only_once">只一次</string>
+    <string name="every_day">每天</string>
+    <string name="please_entry">请输入</string>
+    <string name="floating_window_permission_denied">权限不足，无法创建悬浮窗</string>
+    <string name="import_update_prompt">请选择一个脚本更新包</string>
+    <string name="delete_confirmation">删除确认</string>
+    <string name="delete_confirmation_prompt">是否要删除脚本[%s]？</string>
+    <string name="file_import_failed">无法导入该文件</string>
+    <string name="import_file_prompt">请选择一个文件进行导入</string>
+    <string name="never_run">从未运行</string>
+    <string name="run_time">运行于%s</string>
+    <string name="forbid_deletion">运行中无法删除脚本</string>
+    <string name="switch_failed">切换失败，该脚本不可用</string>
+    <string name="forbid_switch">运行中无法切换脚本</string>
+    <string name="acessibility_service_unavailable">无障碍服务不可用</string>
+    <string name="accessibility_service_not_enabled">无障碍服务未运行</string>
+    <string name="accessibility_service_not_running">无障碍服务未正确运行，请尝试重启手机再试</string>
+    <string name="read_phone_state_permission_denied">没用读取设备信息权限</string>
+    <string name="screen_capture_unavailable">屏幕捕获功能开启失败</string>
+    <string name="start_scheduler">开始执行脚本运行计划</string>
+    <string name="scheduler_next_run_time">下一计划执行时间：%s</string>
+    <string name="script_scheduler_tip">已设置 %s 运行脚本[%s]</string>
+    <string name="script_scheduler_tip2">查看更多脚本运行计划</string>
+    <string name="run_by_root_enabled">开启ROOT模式</string>
+    <string name="run_by_root_disabled">关闭ROOT模式</string>
+    <string name="script_not_exist">脚本不存在</string>
+    <string name="script_already_running">脚本已在运行中</string>
+    <string name="script_start_failed">脚本启动失败</string>
+    <string name="start_script_desc">启动脚本[%s]</string>
+    <string name="script_stopping">脚本重启中</string>
+    <string name="script_stopped">脚本已中止</string>
+    <string name="script_exception">脚本执行异常</string>
+    <string name="cmd_server_started">服务已开启</string>
+    <string name="cmd_server_start_failed">服务开启失败</string>
+    <string name="cmd_server_stopped">服务已关闭</string>
+    <string name="device_access_confirmation">设备接入提示</string>
+    <string name="dlg_allow">允许</string>
+    <string name="dlg_deny">拒绝</string>
+    <string name="device_access_prompt">远程设备 %s(%s) 请求控制本机，是否允许？</string>
+    <string name="a_year_ago">一年前</string>
+    <string name="today">今天</string>
+    <string name="yesterday">昨天</string>
+    <string name="two_days_ago">前天</string>
+    <string name="n_days_ago">%d天前</string>
+    <string name="save_option">保存设置</string>
+    <string name="system_version">系统版本</string>
+    <string name="cpu_abi">CPU ABI</string>
+    <string name="root_status">Root状态</string>
+    <string name="wifi_addr">Wifi地址</string>
+    <string name="about_app">关于脚本大师</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string-array name="repeat_frequency">
+        <item>只一次</item>
+        <item>每天</item>
+        <item>自定义</item>
+    </string-array>
+    <string-array name="week">
+        <item>周一</item>
+        <item>周二</item>
+        <item>周三</item>
+        <item>周四</item>
+        <item>周五</item>
+        <item>周六</item>
+        <item>周日</item>
+    </string-array>
+    <string-array name="visitor_permission">
+        <item>允许</item>
+        <item>拒绝</item>
+        <item>询问</item>
+        <item>删除</item>
+    </string-array>
+    <string name="invalid_script_id">无效脚本ID</string>
+    <string name="enable_private_config">启用独立设置</string>
+    <string name="show_private_config">查看独立设置</string>
+    <string name="save_scheduler_confirmation">保存计划确认</string>
+    <string name="save_scheduler_confirmation_prompt">开启脚本独立设置前需要先保存计划，是否继续？</string>
+    <string name="clear_logs_confirmation">清空日志确认</string>
+    <string name="clear_logs_confirmation_prompt">是否要清空全部脚本日志？</string>
+    <string name="action_redownload">重新下载</string>
+    <string name="script_notification">脚本通知</string>
+    <string name="screen_capture_service_enabling">正在开启屏幕捕获服务…</string>
+    <string name="screen_capture_service_enabled">已开启屏幕捕获服务</string>
+    <string name="script_control">脚本控制</string>
+    <string name="script_state_tip1">脚本[%s]正在运行中…</string>
+    <string name="script_state_tip2">脚本[%s]已停止</string>
+    <string name="script_state_tip">%s，本次运行时长：%s</string>
+    <string name="script_setting">脚本设置</string>
+</resources>

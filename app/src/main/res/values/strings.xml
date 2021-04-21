@@ -91,7 +91,7 @@
     <string name="dlg_go_to_open">前往开启</string>
     <string name="dlg_propmt">提示</string>
     <string name="request_accessibility_prompt">脚本需要通用无障碍服务来对设备进行控制，即将跳转到功能开启页面</string>
-    <string name="system_function_not_supported">当前系统不支持手势模拟功能</string>
+    <string name="system_function_not_supported">当前系统不支持该功能</string>
     <string name="screen_capture_permission_denied">未取得屏幕捕获权限，部分功能将无法使用</string>
     <string name="draw_overlay_permission_denied">未取得顶层显示权限，部分功能将受到影响</string>
     <string name="only_once">只一次</string>

@@ -136,11 +136,16 @@ public class System {
     }
 
     public boolean startApp(String pkgName, String clsName) {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        ComponentName componentName = new ComponentName(pkgName, clsName);
-        intent.setComponent(componentName);
-        mContext.startActivity(intent);
+        if (!clsName.equals("")) {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            ComponentName componentName = new ComponentName(pkgName, clsName);
+            intent.setComponent(componentName);
+            mContext.startActivity(intent);
+        } else {
+            Intent intent = mContext.getPackageManager().getLaunchIntentForPackage(pkgName);
+            mContext.startActivity(intent);
+        }
         return true;
     }
 

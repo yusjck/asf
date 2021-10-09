@@ -1,3 +1,19 @@
-# asf安卓脚本运行平台
+## 简介
 
-示例脚本和说明：https://github.com/yusjck/asf-script-example
+asf是一款安卓下的lua脚本运行平台，目的是为使用者提供一个能够模拟用户对手机系统和APP进行自动化操作的渠道，使用者通过自行编写脚本来实现对手机的各种复杂操作。
+
+## 特性
+- 使用lua作为脚本编程语言
+- 通过无障碍服务获取屏幕UI节点信息，模拟节点操作和触控操作
+- 支持以像素方式进行屏幕图像查找和颜色识别
+- 支持导入多个脚本并为每个脚本添加任务计划
+- 支持为每个脚本添加配置界面
+
+## 系统要求
+支持Android 4.4+<br>
+Android 6.0以下需要ROOT才能执行屏幕图像相关操作（基于minicap代码）<br>
+Android 7.0以下需要ROOT才能执行屏幕触控操作（基于minitouch代码）<br>
+Android 7.0以上系统可无需ROOT
+
+## 测试
+示例脚本和使用方法：https://github.com/yusjck/asf-script-example

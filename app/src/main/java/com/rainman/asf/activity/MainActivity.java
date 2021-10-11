@@ -28,17 +28,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.rainman.asf.App;
 import com.rainman.asf.fragment.DrawerFragment;
 import com.rainman.asf.R;
 import com.rainman.asf.fragment.LogFragment;
 import com.rainman.asf.fragment.SchedulerFragment;
 import com.rainman.asf.fragment.ScriptFragment;
-import com.rainman.asf.core.ScriptEngine;
+import com.rainman.asf.core.ScriptActuator;
 import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.util.DisplayUtil;
 import com.rainman.asf.util.ToastUtil;
 
-public class MainActivity extends AppCompatActivity implements ScriptManager.ScriptListener, ScriptEngine.EngineStateListener {
+public class MainActivity extends AppCompatActivity implements ScriptManager.ScriptListener, ScriptActuator.EngineStateListener {
 
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_CODE = 1000;
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
     private FloatingActionButton btScriptControl;
     private DrawerLayout mDrawerLayout;
     private ScriptManager mScriptManager;
-    private ScriptEngine mScriptEngine;
+    private ScriptActuator mScriptActuator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +57,9 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
 
         initView();
 
-        mScriptEngine = ScriptEngine.getInstance();
+        mScriptActuator = ScriptActuator.getInstance();
         // 设置引擎状态监听器
-        mScriptEngine.setEngineStateListener(this);
+        mScriptActuator.setEngineStateListener(this);
 
         mScriptManager = ScriptManager.getInstance();
         // 注册脚本状态监听器
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
         checkPermission();
         loadFrameLayout();
 
-        if (mScriptManager.getScriptState() != ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+        if (mScriptManager.getScriptState() != ScriptActuator.ScriptState.SCRIPT_STOPPED) {
             btScriptControl.setImageResource(R.drawable.ic_stop);
         } else {
             btScriptControl.setImageResource(R.drawable.ic_start);
@@ -79,8 +80,9 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mScriptEngine.setEngineStateListener(null);
+        mScriptActuator.setEngineStateListener(null);
         mScriptManager.unregisterScriptListener(this);
+        Log.i(TAG, "destroy MainActivity");
     }
 
     @Override
@@ -256,31 +258,31 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
     private void updateStatusBar(boolean exceptFlag) {
         int stateResId = R.string.script_state_unknown;
         switch (mScriptManager.getScriptState()) {
-            case ScriptEngine.ScriptState.SCRIPT_STARTING:
+            case ScriptActuator.ScriptState.SCRIPT_STARTING:
                 stateResId = R.string.script_state_starting;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_RUNNING:
+            case ScriptActuator.ScriptState.SCRIPT_RUNNING:
                 stateResId = R.string.script_state_running;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_STOPPING:
+            case ScriptActuator.ScriptState.SCRIPT_STOPPING:
                 stateResId = R.string.script_state_stopping;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_STOPPED:
+            case ScriptActuator.ScriptState.SCRIPT_STOPPED:
                 stateResId = R.string.script_state_stopped;
                 if (exceptFlag) {
                     stateResId = R.string.script_state_exception;
                 }
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_ALERTING:
+            case ScriptActuator.ScriptState.SCRIPT_ALERTING:
                 stateResId = R.string.script_state_alerting;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_BLOCKING:
+            case ScriptActuator.ScriptState.SCRIPT_BLOCKING:
                 stateResId = R.string.script_state_blocking;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_SUSPENDING:
+            case ScriptActuator.ScriptState.SCRIPT_SUSPENDING:
                 stateResId = R.string.script_state_suspending;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_RESETING:
+            case ScriptActuator.ScriptState.SCRIPT_RESETING:
                 stateResId = R.string.script_state_reseting;
                 break;
         }
@@ -318,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
     public void onScriptStateChanged(int state, boolean exceptFlag) {
         Log.i(TAG, "scriptState=" + state + ",exceptFlag=" + exceptFlag);
 
-        if (state == ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+        if (state == ScriptActuator.ScriptState.SCRIPT_STOPPED) {
             btScriptControl.setImageResource(R.drawable.ic_start);
         } else {
             btScriptControl.setImageResource(R.drawable.ic_stop);
@@ -328,16 +330,16 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
     }
 
     public void onScriptControl() {
-        if (mScriptManager.getScriptState() == ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+        if (mScriptManager.getScriptState() == ScriptActuator.ScriptState.SCRIPT_STOPPED) {
             if (mScriptManager.getCurrentScript() == null) {
                 ToastUtil.show(this, R.string.run_script_prompt);
                 return;
             }
             if (checkPermission()) {
-                mScriptEngine.startScript();
+                mScriptActuator.startScript();
             }
         } else {
-            mScriptEngine.stopScript();
+            mScriptActuator.stopScript();
         }
     }
 
@@ -353,11 +355,6 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
                 displayFragment(new ScriptFragment());
                 return;
             }
-
-//            Intent backHome = new Intent(Intent.ACTION_MAIN);
-//            backHome.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            backHome.addCategory(Intent.CATEGORY_HOME);
-//            startActivity(backHome);
             finish();
         }
     }
@@ -369,30 +366,31 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
     }
 
     public void exit() {
-        mScriptEngine.stopScript();
+        mScriptActuator.stopScript();
         finish();
+        App.getInstance().exitApp();
     }
 
     @Override
     public void onEngineStateChanged(int engineState) {
         switch (engineState) {
-            case ScriptEngine.ENGINE_CONNECTED:
+            case ScriptActuator.ENGINE_CONNECTED:
                 tvScriptState.setVisibility(View.VISIBLE);
                 tvEngineState.setVisibility(View.GONE);
                 tvEngineState.setText(R.string.engine_connected);
                 break;
-            case ScriptEngine.ENGINE_DISCONNECTED:
+            case ScriptActuator.ENGINE_DISCONNECTED:
                 tvScriptState.setVisibility(View.GONE);
                 tvEngineState.setVisibility(View.VISIBLE);
                 tvEngineState.setText(R.string.engine_disconnected);
                 break;
-            case ScriptEngine.ENGINE_CONNECTION_FAIL:
+            case ScriptActuator.ENGINE_CONNECTION_FAIL:
                 tvScriptState.setVisibility(View.GONE);
                 tvEngineState.setVisibility(View.VISIBLE);
                 tvEngineState.setText(R.string.engine_connection_fail);
                 showEngineError();
                 break;
-            case ScriptEngine.ENGINE_CONNECTION_LOSE:
+            case ScriptActuator.ENGINE_CONNECTION_LOSE:
                 tvScriptState.setVisibility(View.GONE);
                 tvEngineState.setVisibility(View.VISIBLE);
                 tvEngineState.setText(R.string.engine_connection_lose);
@@ -407,7 +405,7 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
                 .setPositiveButton(R.string.dlg_retry, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mScriptEngine.reconnectNativeEngine();
+                        mScriptActuator.reconnectNativeEngine();
                         dialog.dismiss();
                     }
                 })

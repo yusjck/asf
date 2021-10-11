@@ -13,10 +13,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
-import com.rainman.asf.core.DeviceEventReceiver;
 import com.rainman.asf.core.ScriptControlService;
 import com.rainman.asf.core.SchedulerService;
-import com.rainman.asf.core.ScriptEngine;
+import com.rainman.asf.core.ScriptActuator;
 import com.rainman.asf.core.ScriptLogger;
 import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.core.VisitorManager;
@@ -27,6 +26,9 @@ public class App extends Application {
 
     private static final String TAG = "App";
     private static App mInstance;
+    private boolean mAppInited = false;
+    private ShakeListener mShakeListener;
+    private FloatingWindow mFloatingWindow;
 
     public static App getInstance() {
         return mInstance;
@@ -45,20 +47,11 @@ public class App extends Application {
         mInstance = this;
         x.Ext.init(this);
         AppSetting.init(this);
-        VisitorManager.init(this);
 
-        ScriptEngine.init(this);
+        ScriptActuator.init(this);
         ScriptManager.init(this);
         ScriptLogger.init(this);
-
-        // 启动脚本引擎
-        ScriptEngine.getInstance().startup();
-
-        // 启动任务计划服务
-        startService(new Intent(this, SchedulerService.class));
-
-        // 启动通知栏脚本控制服务
-        ContextCompat.startForegroundService(this, new Intent(this, ScriptControlService.class));
+        VisitorManager.init(this);
 
         // 初始化摇一摇
         initShake();
@@ -66,8 +59,10 @@ public class App extends Application {
         // 注册脚本控制热键
         GlobalHotKey.registerGlobalHotKey();
 
-        // 注册设备事件监听
-        DeviceEventReceiver.registerReceiver(this);
+        // 注册设备事件接收器
+        DeviceEvent.registerReceiver(this);
+
+        mFloatingWindow = new FloatingWindow();
     }
 
     @Override
@@ -75,23 +70,62 @@ public class App extends Application {
         super.onTerminate();
 
         Log.i(TAG, "onTerminate");
+        mShakeListener.stop();
         GlobalHotKey.unregisterGlobalHotKey();
-        DeviceEventReceiver.unregisterReceiver(this);
+        DeviceEvent.unregisterReceiver(this);
+    }
+
+    public void switchFloatingWindow() {
+        if (AppSetting.isFloatingWndEnabled()) {
+            mFloatingWindow.showWindow(this);
+        } else {
+            mFloatingWindow.dismissWindow();
+        }
+    }
+
+    public boolean isAppInited() {
+        return mAppInited;
+    }
+
+    public void initApp() {
+        if (mAppInited)
+            return;
+
+        // 启动脚本引擎
+        ScriptActuator.getInstance().startup();
+
+        // 启动任务计划服务
+        startService(new Intent(this, SchedulerService.class));
+
+        // 启动通知栏脚本控制服务
+        ContextCompat.startForegroundService(this, new Intent(this, ScriptControlService.class));
+
+        mAppInited = true;
+    }
+
+    public void exitApp() {
+        mFloatingWindow.dismissWindow();
+        ScriptActuator.getInstance().cleanup();
+        stopService(new Intent(this, SchedulerService.class));
+        stopService(new Intent(this, ScriptControlService.class));
+
+        mAppInited = false;
     }
 
     private void initShake() {
-        ShakeListener shakeListener = new ShakeListener(this);
-        shakeListener.setOnShakeListener(new ShakeListener.OnShakeListener() {
+        mShakeListener = new ShakeListener(this);
+        mShakeListener.setOnShakeListener(new ShakeListener.OnShakeListener() {
             @Override
             public void onShake() {
                 if (AppSetting.isStopWhenWaggling()) {
-                    ScriptEngine.getInstance().stopScript();
+                    ScriptActuator.getInstance().stopScript();
                 }
             }
         });
+        mShakeListener.start();
     }
 
-    static class ShakeListener implements SensorEventListener {
+    private static class ShakeListener implements SensorEventListener {
 
         private static final int SPEED_SHRESHOLD = 3000;
         private static final int UPTATE_INTERVAL_TIME = 100;
@@ -99,13 +133,11 @@ public class App extends Application {
         private float mLastX;
         private float mLastY;
         private float mLastZ;
-        private Context mContext;
+        private final SensorManager mSensorManager;
         private OnShakeListener mOnShakeListener;
-        private SensorManager mSensorManager;
 
         ShakeListener(Context context) {
-            this.mContext = context;
-            start();
+            mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         }
 
         @Override
@@ -139,7 +171,6 @@ public class App extends Application {
         }
 
         public void start() {
-            mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
             Sensor sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             mSensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
         }

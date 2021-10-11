@@ -15,6 +15,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.rainman.asf.App;
 import com.rainman.asf.R;
 import com.rainman.asf.accessibility.AccessibilityHelper;
 
@@ -24,9 +25,8 @@ public class SplashActivity extends AppCompatActivity {
     private static final int REQUEST_ACCESSIBILITY = 101;
     private RelativeLayout rlSplashRoot;
     private TextView tvVersionName;
-    private static boolean mAppInited = false;
 
-    private Handler mHandler = new Handler(Looper.getMainLooper()) {
+    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
@@ -61,12 +61,12 @@ public class SplashActivity extends AppCompatActivity {
             return;
         }
 
-        if (mAppInited) {
+        if (App.getInstance().isAppInited()) {
             entryHome();
             return;
         }
 
-        mAppInited = true;
+        App.getInstance().initApp();
         initView();
         initData();
         initAnimation();

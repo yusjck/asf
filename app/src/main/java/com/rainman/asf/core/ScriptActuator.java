@@ -16,6 +16,7 @@ import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 import com.rainman.asf.AppSetting;
+import com.rainman.asf.DeviceEvent;
 import com.rainman.asf.R;
 import com.rainman.asf.core.database.Script;
 import com.rainman.asf.core.database.ScriptLog;
@@ -28,22 +29,23 @@ import com.rainman.asf.util.ToastUtil;
 import java.io.File;
 import java.util.Date;
 
-public class ScriptEngine {
+public class ScriptActuator {
 
-    private static final String TAG = "ScriptEngine";
+    private static final String TAG = "ScriptActuator";
     private static final int MSG_UPDATE_SCRIPT_STATE = 1;
     private static final int MSG_OUTPUT_SCRIPT_LOG = 2;
     private static final int MSG_UPDATE_CMD_SERVER_STATE = 3;
     private static final int MSG_ENGINE_DISCONNECTED = 4;
 
-    private static ScriptEngine mInstance;
+    private static ScriptActuator mInstance;
     private Application mApp;
     private String mEngineWorkDir;
     private boolean mRootModeEnabled;
     private int mEngineState = ENGINE_DISCONNECTED;
     private EngineStateListener mEngineStateListener;
+    private DeviceEvent.EventListener mDeviceEventListener;
 
-    private Handler mHandler = new Handler(Looper.getMainLooper()) {
+    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
@@ -65,7 +67,7 @@ public class ScriptEngine {
         }
     };
 
-    public static ScriptEngine getInstance() {
+    public static ScriptActuator getInstance() {
         if (mInstance == null) {
             throw new RuntimeException("init first");
         }
@@ -77,7 +79,7 @@ public class ScriptEngine {
     }
 
     public static void init(Application app) {
-        mInstance = new ScriptEngine();
+        mInstance = new ScriptActuator();
         mInstance.mApp = app;
     }
 
@@ -88,10 +90,40 @@ public class ScriptEngine {
         nativeLoadEngine(mEngineWorkDir);
         reconnectNativeEngine();
 
+        mDeviceEventListener = new DeviceEvent.EventListener() {
+            @Override
+            public void onVolumnDown() {
+                if (AppSetting.isVolumnKeyControl()) {
+                    ScriptActuator.getInstance().startScript();
+                }
+            }
+
+            @Override
+            public void onVolumnUp() {
+                if (AppSetting.isVolumnKeyControl()) {
+                    ScriptActuator.getInstance().stopScript();
+                }
+            }
+
+            @Override
+            public void onCalling() {
+                if (AppSetting.isStopWhenCalling()) {
+                    ScriptActuator.getInstance().stopScript();
+                }
+            }
+
+            @Override
+            public void onRotationChanged() {
+                reportDisplayInfo();
+            }
+        };
+        DeviceEvent.registerListener(mDeviceEventListener);
+
         Log.i(TAG, "script engine started");
     }
 
     public void cleanup() {
+        DeviceEvent.unregisterListener(mDeviceEventListener);
         disconnectEngine();
         nativeUnloadEngine();
         Log.i(TAG, "script engine stopped");
@@ -123,6 +155,10 @@ public class ScriptEngine {
 
     private native void nativeUnloadEngine();
 
+    /**
+     * App本身是一直运行在普通权限下的，而Native层的lua引擎可作为单独进程启动，当需要让脚本
+     * 拥有ROOT权限时可直接使用ROOT权限来启动lua引擎
+     */
     private void loadNativeEngineByRoot() {
         Log.i(TAG, "CPU_ABI=" + Build.CPU_ABI);
         String minicapResPath = "minicap/android-" + Build.VERSION.SDK_INT + "/" + Build.CPU_ABI + "/minicap.so";
@@ -252,7 +288,7 @@ public class ScriptEngine {
         }
     }
 
-    void reportDisplayInfo() {
+    private void reportDisplayInfo() {
         Display defaultDisplay = ((WindowManager) mApp.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         int rotation = 0;
         switch (defaultDisplay.getRotation()) {

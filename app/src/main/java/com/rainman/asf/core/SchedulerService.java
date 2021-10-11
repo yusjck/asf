@@ -72,7 +72,7 @@ public class SchedulerService extends Service {
 
             @Override
             public void onScriptStateChanged(int state, boolean exceptFlag) {
-                if (state == ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+                if (state == ScriptActuator.ScriptState.SCRIPT_STOPPED) {
                     mScriptManager.unregisterScriptListener(this);
                     // 当脚本停止时判断列表中是否存在已到执行时间的计划，是就触发下一个执行计划
                     if (mPendingSchedulers.size() > 0) {
@@ -123,9 +123,9 @@ public class SchedulerService extends Service {
                     // 启动目标脚本
                     ScriptLogger.addLog(getString(R.string.start_scheduler));
                     if (scheduler.isConfigEnabled()) {
-                        ScriptEngine.getInstance().startScript(scheduler.getConfigName());
+                        ScriptActuator.getInstance().startScript(scheduler.getConfigName());
                     } else {
-                        ScriptEngine.getInstance().startScript();
+                        ScriptActuator.getInstance().startScript();
                     }
                 }
 

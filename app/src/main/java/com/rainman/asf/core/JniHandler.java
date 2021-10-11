@@ -7,8 +7,8 @@ import com.rainman.asf.core.ipc.AndroidCaller;
 public class JniHandler {
 
     @Keep
-    private Object createAndroidCaller(ScriptEngine engine) {
-        return new AndroidCaller(engine.getContext());
+    private Object createAndroidCaller(ScriptActuator actuator) {
+        return new AndroidCaller(actuator.getContext());
     }
 
     @Keep

@@ -1,5 +1,6 @@
 package com.rainman.asf.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -21,7 +22,7 @@ import com.rainman.asf.AppSetting;
 import com.rainman.asf.R;
 import com.rainman.asf.activity.AboutActivity;
 import com.rainman.asf.activity.VisitorActivity;
-import com.rainman.asf.core.ScriptEngine;
+import com.rainman.asf.core.ScriptActuator;
 import com.rainman.asf.core.database.CoreDatabase;
 import com.rainman.asf.core.database.Visitor;
 import com.rainman.asf.core.database.VisitorDao;
@@ -56,7 +57,7 @@ public class SettingFragment extends PreferenceFragmentCompat {
                 new Handler().post(new Runnable() {
                     @Override
                     public void run() {
-                        ScriptEngine.getInstance().switchEngine();
+                        ScriptActuator.getInstance().switchEngine();
                     }
                 });
                 return true;
@@ -78,7 +79,7 @@ public class SettingFragment extends PreferenceFragmentCompat {
                 new Handler().post(new Runnable() {
                     @Override
                     public void run() {
-                        ScriptEngine.getInstance().switchCmdServer();
+                        ScriptActuator.getInstance().switchCmdServer();
                     }
                 });
                 spEnableAccesssAuthorization.setEnabled((boolean) o);
@@ -157,7 +158,7 @@ public class SettingFragment extends PreferenceFragmentCompat {
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void requestIgnoreBatteryOptimizations() {
         try {
-            Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            @SuppressLint("BatteryLife") Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + mActivity.getPackageName()));
             startActivityForResult(intent, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
         } catch (Exception e) {

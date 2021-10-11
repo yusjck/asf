@@ -7,7 +7,7 @@ import java.io.File;
 public class ScriptEnvironment {
 
     public static String getScriptRootDir() {
-        Context context = ScriptEngine.getInstance().getContext();
+        Context context = ScriptActuator.getInstance().getContext();
         String scriptPath = context.getFilesDir().getPath() + "/scripts";
         File scriptDir = new File(scriptPath);
         if (!scriptDir.exists()) {
@@ -17,7 +17,7 @@ public class ScriptEnvironment {
     }
 
     public static String getTempDir() {
-        Context context = ScriptEngine.getInstance().getContext();
+        Context context = ScriptActuator.getInstance().getContext();
         String tmpPath = context.getCacheDir().getPath() + "/tmp";
         File tmpDir = new File(tmpPath);
         if (!tmpDir.exists()) {
@@ -27,7 +27,7 @@ public class ScriptEnvironment {
     }
 
     public static String getPluginDir() {
-        Context context = ScriptEngine.getInstance().getContext();
+        Context context = ScriptActuator.getInstance().getContext();
         String tmpPath = context.getFilesDir().getPath() + "/plugins";
         File tmpDir = new File(tmpPath);
         if (!tmpDir.exists()) {
@@ -37,7 +37,7 @@ public class ScriptEnvironment {
     }
 
     public static String getLogDir() {
-        Context context = ScriptEngine.getInstance().getContext();
+        Context context = ScriptActuator.getInstance().getContext();
         String logPath = context.getCacheDir().getPath() + "/logs";
         File logDir = new File(logPath);
         if (!logDir.exists()) {
@@ -47,7 +47,7 @@ public class ScriptEnvironment {
     }
 
     public static String getStartupDir() {
-        Context context = ScriptEngine.getInstance().getContext();
+        Context context = ScriptActuator.getInstance().getContext();
         return context.getCacheDir().getAbsolutePath();
     }
 }

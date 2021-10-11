@@ -18,6 +18,7 @@ import com.rainman.asf.R;
 import com.rainman.asf.activity.MainActivity;
 import com.rainman.asf.activity.OptionActivity;
 import com.rainman.asf.core.database.Script;
+import com.rainman.asf.core.screenshot.ScreenCaptureService;
 
 import java.util.Locale;
 import java.util.Timer;
@@ -51,7 +52,7 @@ public class ScriptControlService extends Service {
 
             @Override
             public void onScriptStateChanged(int state, boolean exceptFlag) {
-                if (state == ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+                if (state == ScriptActuator.ScriptState.SCRIPT_STOPPED) {
                     stopTick();
                 } else {
                     startTick();
@@ -70,10 +71,10 @@ public class ScriptControlService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if ("startScript".equals(intent.getAction())) {
             collapseStatusBar();
-            ScriptEngine.getInstance().startScript();
+            ScriptActuator.getInstance().startScript();
         } else if ("stopScript".equals(intent.getAction())) {
             collapseStatusBar();
-            ScriptEngine.getInstance().stopScript();
+            ScriptActuator.getInstance().stopScript();
         } else if ("setting".equals(intent.getAction())) {
             collapseStatusBar();
             Script script = mScriptManager.getCurrentScript();
@@ -90,6 +91,7 @@ public class ScriptControlService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopService(new Intent(this, ScreenCaptureService.class));
         mScriptManager.unregisterScriptListener(mScriptListener);
         removeNotification();
     }
@@ -186,7 +188,7 @@ public class ScriptControlService extends Service {
         }
 
         String scriptStatusTip;
-        if (mScriptManager.getScriptState() == ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+        if (mScriptManager.getScriptState() == ScriptActuator.ScriptState.SCRIPT_STOPPED) {
             scriptStatusTip = String.format(getString(R.string.script_state_tip), getString(R.string.script_state_stopped), getTotalRunningTime());
         } else {
             scriptStatusTip = String.format(getString(R.string.script_state_tip), getString(R.string.script_state_running), getTotalRunningTime());

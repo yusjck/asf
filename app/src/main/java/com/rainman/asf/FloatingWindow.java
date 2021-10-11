@@ -1,7 +1,6 @@
 package com.rainman.asf;
 
 import android.animation.ValueAnimator;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
@@ -19,7 +18,7 @@ import android.view.animation.BounceInterpolator;
 import android.widget.ImageView;
 
 import com.rainman.asf.activity.OptionActivity;
-import com.rainman.asf.core.ScriptEngine;
+import com.rainman.asf.core.ScriptActuator;
 import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.core.database.Script;
 import com.rainman.asf.util.DisplayUtil;
@@ -27,22 +26,18 @@ import com.rainman.asf.util.ToastUtil;
 
 public class FloatingWindow {
 
-    @SuppressLint("StaticFieldLeak")
-    private static FloatingWindow mInstance;
     private WindowManager mWindowManager;
     private View mView;
     private WindowManager.LayoutParams mLayoutParams;
     private int mScreenWidth;
-    private FloatingMenu mFloatingMenu = new FloatingMenu();
+    private final FloatingMenu mFloatingMenu = new FloatingMenu();
+    private DeviceEvent.EventListener mRotationListener;
 
-    public static FloatingWindow getInstance() {
-        if (mInstance == null) {
-            mInstance = new FloatingWindow();
+    public void showWindow(Context context) {
+        if (!(Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(context))) {
+            ToastUtil.show(context, R.string.floating_window_permission_denied);
+            return;
         }
-        return mInstance;
-    }
-
-    private void showWindow(Context context) {
         if (mWindowManager == null && mView == null) {
             mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             mView = View.inflate(context, R.layout.view_floating_window, null);
@@ -77,30 +72,37 @@ public class FloatingWindow {
                     ivIcon.setAnimation(alphaAnimation);
                 }
             });
+
+            mRotationListener = new DeviceEvent.EventListener() {
+                @Override
+                public void onRotationChanged() {
+                    if (mWindowManager != null && mView != null) {
+                        mFloatingMenu.closeMenu();
+
+                        Point point = new Point();
+                        mWindowManager.getDefaultDisplay().getSize(point);
+                        if (mLayoutParams.x > 0) {
+                            mLayoutParams.x = point.x - (int) (mView.getMeasuredWidth() * 0.6);
+                        }
+                        mLayoutParams.y *= (float) mScreenWidth / point.x;
+                        mScreenWidth = point.x;
+                        mWindowManager.updateViewLayout(mView, mLayoutParams);
+                    }
+                }
+            };
+            DeviceEvent.registerListener(mRotationListener);
         }
     }
 
-    private void dismissWindow() {
+    public void dismissWindow() {
         if (mWindowManager != null && mView != null) {
             mFloatingMenu.closeMenu();
+            DeviceEvent.unregisterListener(mRotationListener);
 
             mWindowManager.removeViewImmediate(mView);
             mWindowManager = null;
             mView = null;
             mLayoutParams = null;
-        }
-    }
-
-    public void switchFloatingWindow(Context context) {
-        if (AppSetting.isFloatingWndEnabled()) {
-            context = context.getApplicationContext();
-            if (Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(context)) {
-                showWindow(context);
-            } else {
-                ToastUtil.show(context, R.string.floating_window_permission_denied);
-            }
-        } else {
-            dismissWindow();
         }
     }
 
@@ -205,7 +207,7 @@ public class FloatingWindow {
                 ivStart.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ScriptEngine.getInstance().startScript();
+                        ScriptActuator.getInstance().startScript();
                         closeMenu();
                     }
                 });
@@ -214,7 +216,7 @@ public class FloatingWindow {
                 ivStop.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ScriptEngine.getInstance().stopScript();
+                        ScriptActuator.getInstance().stopScript();
                         closeMenu();
                     }
                 });
@@ -297,21 +299,6 @@ public class FloatingWindow {
 
                 mView.setVisibility(View.VISIBLE);
             }
-        }
-    }
-
-    public void rotateScreen() {
-        if (mWindowManager != null && mView != null) {
-            mFloatingMenu.closeMenu();
-
-            Point point = new Point();
-            mWindowManager.getDefaultDisplay().getSize(point);
-            if (mLayoutParams.x > 0) {
-                mLayoutParams.x = point.x - (int) (mView.getMeasuredWidth() * 0.6);
-            }
-            mLayoutParams.y *= (float) mScreenWidth / point.x;
-            mScreenWidth = point.x;
-            mWindowManager.updateViewLayout(mView, mLayoutParams);
         }
     }
 }

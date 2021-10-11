@@ -22,7 +22,7 @@ public class ScriptManager {
     private SharedPreferences mSettingData;
     private final List<Script> mScripts = new ArrayList<>();
     private final List<ScriptListener> mScriptListeners = new ArrayList<>();
-    private int mLastScriptState = ScriptEngine.ScriptState.SCRIPT_STOPPED;
+    private int mLastScriptState = ScriptActuator.ScriptState.SCRIPT_STOPPED;
 
     public static ScriptManager getInstance() {
         if (mInstance == null) {
@@ -150,7 +150,7 @@ public class ScriptManager {
         }
 
         // 运行中不允许切换
-        if (mLastScriptState != ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+        if (mLastScriptState != ScriptActuator.ScriptState.SCRIPT_STOPPED) {
             return false;
         }
 
@@ -175,7 +175,7 @@ public class ScriptManager {
         }
 
         // 运行中不允许删除
-        if (mLastScriptState != ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+        if (mLastScriptState != ScriptActuator.ScriptState.SCRIPT_STOPPED) {
             return false;
         }
 
@@ -207,7 +207,7 @@ public class ScriptManager {
      * @return 脚本ID
      */
     public long getRunningScriptId() {
-        if (mLastScriptState == ScriptEngine.ScriptState.SCRIPT_STOPPED) {
+        if (mLastScriptState == ScriptActuator.ScriptState.SCRIPT_STOPPED) {
             return 0;
         }
         return getCurrentScriptId();
@@ -220,28 +220,28 @@ public class ScriptManager {
     public String getScriptStateString(Context context) {
         int stateResId = R.string.script_state_unknown;
         switch (getScriptState()) {
-            case ScriptEngine.ScriptState.SCRIPT_STARTING:
+            case ScriptActuator.ScriptState.SCRIPT_STARTING:
                 stateResId = R.string.script_state_starting;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_RUNNING:
+            case ScriptActuator.ScriptState.SCRIPT_RUNNING:
                 stateResId = R.string.script_state_running;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_STOPPING:
+            case ScriptActuator.ScriptState.SCRIPT_STOPPING:
                 stateResId = R.string.script_state_stopping;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_STOPPED:
+            case ScriptActuator.ScriptState.SCRIPT_STOPPED:
                 stateResId = R.string.script_state_stopped;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_ALERTING:
+            case ScriptActuator.ScriptState.SCRIPT_ALERTING:
                 stateResId = R.string.script_state_alerting;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_BLOCKING:
+            case ScriptActuator.ScriptState.SCRIPT_BLOCKING:
                 stateResId = R.string.script_state_blocking;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_SUSPENDING:
+            case ScriptActuator.ScriptState.SCRIPT_SUSPENDING:
                 stateResId = R.string.script_state_suspending;
                 break;
-            case ScriptEngine.ScriptState.SCRIPT_RESETING:
+            case ScriptActuator.ScriptState.SCRIPT_RESETING:
                 stateResId = R.string.script_state_reseting;
                 break;
         }

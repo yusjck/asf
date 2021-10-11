@@ -4,12 +4,12 @@ import android.util.Log;
 import android.view.KeyEvent;
 
 import com.rainman.asf.accessibility.AccessibilityHelperService;
-import com.rainman.asf.core.ScriptEngine;
+import com.rainman.asf.core.ScriptActuator;
 
 public class GlobalHotKey implements AccessibilityHelperService.GlobalKeyEventListener {
 
     private static final String TAG = "GlobalHotKey";
-    private static GlobalHotKey mGlobalHotKey = new GlobalHotKey();
+    private static final GlobalHotKey mGlobalHotKey = new GlobalHotKey();
 
     @Override
     public boolean onKeyEvent(KeyEvent event) {
@@ -19,11 +19,11 @@ public class GlobalHotKey implements AccessibilityHelperService.GlobalKeyEventLi
             switch (key) {
                 case KeyEvent.KEYCODE_VOLUME_DOWN:
                     Log.i(TAG, "KEYCODE_VOLUME_DOWN");
-                    ScriptEngine.getInstance().startScript();
+                    ScriptActuator.getInstance().startScript();
                     break;
                 case KeyEvent.KEYCODE_VOLUME_UP:
                     Log.i(TAG, "KEYCODE_VOLUME_UP");
-                    ScriptEngine.getInstance().stopScript();
+                    ScriptActuator.getInstance().stopScript();
                     break;
             }
         }

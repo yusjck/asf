@@ -103,7 +103,7 @@ void *createAndroidCaller()
 
 	// new出一个AndroidCaller对象实例
 	jmethodID id = env->GetMethodID(g_ctx.jniHelperClz, "createAndroidCaller",
-	                                "(Lcom/rainman/asf/core/ScriptEngine;)Ljava/lang/Object;");
+	                                "(Lcom/rainman/asf/core/ScriptActuator;)Ljava/lang/Object;");
 	jobject inst = env->CallObjectMethod(g_ctx.jniHelperObj, id, g_ctx.scriptServiceObj);
 	inst = env->NewGlobalRef(inst);
 
@@ -125,6 +125,7 @@ void destroyAndroidCaller(void *androidCaller)
 	g_ctx.javaVM->DetachCurrentThread();
 }
 
+// 用于转发脚本对Java层的Android API的调用
 void forwardAndroidCall(void *androidCaller, CBuffer &request, CBuffer &response)
 {
 	JNIEnv *env;
@@ -146,17 +147,17 @@ void forwardAndroidCall(void *androidCaller, CBuffer &request, CBuffer &response
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_initNativeLib(JNIEnv *env, jobject instance)
+Java_com_rainman_asf_core_ScriptActuator_initNativeLib(JNIEnv *env, jobject instance)
 {
 	jclass clz = env->GetObjectClass(instance);
 	g_ctx.scriptServiceClz = (jclass) env->NewGlobalRef(clz);
 	g_ctx.scriptServiceObj = env->NewGlobalRef(instance);
-	g_androidCallService.Start();
+	g_androidCallService.Start();       // 该服务用来转发脚本对Java层代码的调用
 }
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_rainman_asf_core_ScriptEngine_connectEngine(JNIEnv *env, jobject instance, jstring connName_)
+Java_com_rainman_asf_core_ScriptActuator_connectEngine(JNIEnv *env, jobject instance, jstring connName_)
 {
 	const char *connName = env->GetStringUTFChars(connName_, nullptr);
 	bool result = g_engineBinder.ConnectEngine(connName);
@@ -166,15 +167,15 @@ Java_com_rainman_asf_core_ScriptEngine_connectEngine(JNIEnv *env, jobject instan
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_disconnectEngine(JNIEnv *env, jobject instance)
+Java_com_rainman_asf_core_ScriptActuator_disconnectEngine(JNIEnv *env, jobject instance)
 {
 	g_engineBinder.DisconnectEngine();
 }
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_rainman_asf_core_ScriptEngine_runScript(JNIEnv *env, jobject instance, jstring scriptCfg_,
-                                                 jstring userVar_)
+Java_com_rainman_asf_core_ScriptActuator_runScript(JNIEnv *env, jobject instance, jstring scriptCfg_,
+                                                   jstring userVar_)
 {
 	const char *scriptCfg = env->GetStringUTFChars(scriptCfg_, nullptr);
 	const char *userVar = env->GetStringUTFChars(userVar_, nullptr);
@@ -188,29 +189,33 @@ Java_com_rainman_asf_core_ScriptEngine_runScript(JNIEnv *env, jobject instance, 
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_abort(JNIEnv *env, jobject instance)
+Java_com_rainman_asf_core_ScriptActuator_abort(JNIEnv *env, jobject instance)
 {
 	g_engineBinder.Abort();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_reportDisplayInfo(JNIEnv *env, jobject instance, jint width, jint height,
-                                                         jint rotation)
+Java_com_rainman_asf_core_ScriptActuator_reportDisplayInfo(JNIEnv *env, jobject instance, jint width, jint height,
+                                                           jint rotation)
 {
 	g_engineBinder.SetDisplayInfo(width, height, rotation);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_enableCmdServer(JNIEnv *env, jobject instance, jboolean enable)
+Java_com_rainman_asf_core_ScriptActuator_enableCmdServer(JNIEnv *env, jobject instance, jboolean enable)
 {
 	g_engineBinder.EnableCmdServer(enable);
 }
 
+/**
+ * libengine.so为lua脚本引擎所在模块，该模块采用动态加载方式，当需要脚本以ROOT权限运行时，该模块将由
+ * 一个独立的ROOT权限进程来加载
+ */
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_nativeLoadEngine(JNIEnv *env, jobject instance, jstring workDir_)
+Java_com_rainman_asf_core_ScriptActuator_nativeLoadEngine(JNIEnv *env, jobject instance, jstring workDir_)
 {
 	// 切换当前目录到指定的工作目录中
 	const char *workDir = env->GetStringUTFChars(workDir_, nullptr);
@@ -261,14 +266,14 @@ void processServiceExit()
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_nativeUnloadEngine(JNIEnv *env, jobject instance)
+Java_com_rainman_asf_core_ScriptActuator_nativeUnloadEngine(JNIEnv *env, jobject instance)
 {
 	g_engineBinder.Cleanup();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_sendEvent(JNIEnv *env, jobject instance, jstring event_)
+Java_com_rainman_asf_core_ScriptActuator_sendEvent(JNIEnv *env, jobject instance, jstring event_)
 {
 	const char *event = env->GetStringUTFChars(event_, nullptr);
 	g_engineBinder.SendEvent(event);
@@ -277,7 +282,7 @@ Java_com_rainman_asf_core_ScriptEngine_sendEvent(JNIEnv *env, jobject instance, 
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_rainman_asf_core_ScriptEngine_setPluginDir(JNIEnv *env, jobject instance, jstring pluginDir_)
+Java_com_rainman_asf_core_ScriptActuator_setPluginDir(JNIEnv *env, jobject instance, jstring pluginDir_)
 {
 	const char *pluginDir = env->GetStringUTFChars(pluginDir_, 0);
 	g_engineBinder.SetPluginDir(pluginDir);

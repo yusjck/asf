@@ -19,13 +19,13 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
 
+import com.rainman.asf.App;
 import com.rainman.asf.AppSetting;
-import com.rainman.asf.FloatingWindow;
 import com.rainman.asf.R;
 import com.rainman.asf.accessibility.AccessibilityHelper;
 import com.rainman.asf.accessibility.AccessibilityHelperService;
 import com.rainman.asf.activity.MainActivity;
-import com.rainman.asf.core.ScriptEngine;
+import com.rainman.asf.core.ScriptActuator;
 import com.rainman.asf.core.screenshot.ScreenCaptureService;
 import com.rainman.asf.util.ToastUtil;
 import com.rainman.asf.view.DrawerMenuItem;
@@ -43,7 +43,7 @@ public class DrawerFragment extends Fragment {
     private DrawerMenuItem mRequestDrawOverlay;
     private DrawerMenuItem mFloatingWindowSwitch;
     private DrawerMenuItem mRemoteControlSwitch;
-    private ViewClickListener mViewClickListener = new ViewClickListener();
+    private final ViewClickListener mViewClickListener = new ViewClickListener();
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -76,7 +76,7 @@ public class DrawerFragment extends Fragment {
                 mRequestDrawOverlay.setClickable(false);
             }
 
-            FloatingWindow.getInstance().switchFloatingWindow(mMainActivity);
+            App.getInstance().switchFloatingWindow();
         }
     }
 
@@ -126,7 +126,7 @@ public class DrawerFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 AppSetting.setFloatingWndEnabled(isChecked);
-                FloatingWindow.getInstance().switchFloatingWindow(mMainActivity.getApplicationContext());
+                App.getInstance().switchFloatingWindow();
             }
         });
 
@@ -134,7 +134,7 @@ public class DrawerFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 AppSetting.setCmdServerEnabled(isChecked);
-                ScriptEngine.getInstance().switchCmdServer();
+                ScriptActuator.getInstance().switchCmdServer();
             }
         });
 
@@ -211,7 +211,7 @@ public class DrawerFragment extends Fragment {
                 if (Build.VERSION.SDK_INT >= 23) {
                     if (Settings.canDrawOverlays(mMainActivity)) {
                         mRequestDrawOverlay.setClickable(false);
-                        FloatingWindow.getInstance().switchFloatingWindow(mMainActivity.getApplicationContext());
+                        App.getInstance().switchFloatingWindow();
                     } else {
                         mRequestDrawOverlay.setChecked(false);
                         ToastUtil.show(mMainActivity, R.string.draw_overlay_permission_denied);
@@ -223,46 +223,20 @@ public class DrawerFragment extends Fragment {
         }
     }
 
-    public void onSwitchToScriptView() {
-        mMainActivity.displayFragment(new ScriptFragment());
-    }
-
-    public void onSwitchToLogView() {
-        mMainActivity.displayFragment(new LogFragment());
-    }
-
-    private void onSwitchToSchedulerView() {
-        mMainActivity.displayFragment(new SchedulerFragment());
-    }
-
-    public void onAppSettingClick() {
-        mMainActivity.setting();
-    }
-
-    public void onAppExitClick() {
-        mMainActivity.exit();
-    }
-
-    class ViewClickListener implements View.OnClickListener {
+    private class ViewClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             int viewId = v.getId();
-            switch (viewId) {
-                case R.id.switch_to_script_view:
-                    onSwitchToScriptView();
-                    break;
-                case R.id.switch_to_log_view:
-                    onSwitchToLogView();
-                    break;
-                case R.id.switch_to_scheduler_view:
-                    onSwitchToSchedulerView();
-                    break;
-                case R.id.app_setting:
-                    onAppSettingClick();
-                    break;
-                case R.id.app_exit:
-                    onAppExitClick();
-                    break;
+            if (viewId == R.id.switch_to_script_view) {
+                mMainActivity.displayFragment(new ScriptFragment());
+            } else if (viewId == R.id.switch_to_log_view) {
+                mMainActivity.displayFragment(new LogFragment());
+            } else if (viewId == R.id.switch_to_scheduler_view) {
+                mMainActivity.displayFragment(new SchedulerFragment());
+            } else if (viewId == R.id.app_setting) {
+                mMainActivity.setting();
+            } else if (viewId == R.id.app_exit) {
+                mMainActivity.exit();
             }
         }
     }

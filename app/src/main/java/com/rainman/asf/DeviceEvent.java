@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -15,7 +16,6 @@ public class DeviceEvent extends BroadcastReceiver {
     private static final String TAG = "DeviceEvent";
     private static final DeviceEvent mInstance = new DeviceEvent();
     private final List<EventListener> mEventListeners = new LinkedList<>();
-    private int mOldVolumeValue = -1;
 
     public static abstract class EventListener {
 
@@ -61,19 +61,19 @@ public class DeviceEvent extends BroadcastReceiver {
         if (intent.getAction() != null) {
             switch (intent.getAction()) {
                 case "android.media.VOLUME_CHANGED_ACTION":
-                    Log.i(TAG, "volume changed");
                     Bundle extras = intent.getExtras();
                     assert extras != null;
-                    Integer volume = (Integer) extras.get("android.media.EXTRA_VOLUME_STREAM_VALUE");
-                    assert volume != null;
-                    if (mOldVolumeValue != -1) {
-                        if (volume < mOldVolumeValue) {
-                            onVolumnDown();
-                        } else if (volume > mOldVolumeValue) {
+                    int streamType = extras.getInt("android.media.EXTRA_VOLUME_STREAM_TYPE");
+                    if (streamType == AudioManager.STREAM_MUSIC) {
+                        Log.i(TAG, "volume changed");
+                        int newVolume = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_VALUE", 0);
+                        int oldVolume = intent.getIntExtra("android.media.EXTRA_PREV_VOLUME_STREAM_VALUE", 0);
+                        if (newVolume > oldVolume) {
                             onVolumnUp();
+                        } else if (newVolume < oldVolume) {
+                            onVolumnDown();
                         }
                     }
-                    mOldVolumeValue = volume;
                     break;
                 case "android.intent.action.PHONE_STATE":
                     Log.i(TAG, "calling");

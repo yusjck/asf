@@ -112,7 +112,7 @@
     <string name="accessibility_service_not_enabled">无障碍服务未运行</string>
     <string name="accessibility_service_not_running">无障碍服务未正确运行，请尝试重启手机再试</string>
     <string name="read_phone_state_permission_denied">没用读取设备信息权限</string>
-    <string name="screen_capture_unavailable">屏幕捕获功能开启失败</string>
+    <string name="screen_capture_unavailable">屏幕捕获功能不可用</string>
     <string name="start_scheduler">开始执行脚本运行计划</string>
     <string name="scheduler_next_run_time">下一计划执行时间：%s</string>
     <string name="script_scheduler_tip">已设置 %s 运行脚本[%s]</string>

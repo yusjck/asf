@@ -6,8 +6,6 @@ import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
 
-import com.rainman.asf.R;
-import com.rainman.asf.core.ScriptLogger;
 import com.rainman.asf.core.VisitorManager;
 import com.rainman.asf.core.api.Accessibility;
 import com.rainman.asf.core.api.Device;
@@ -30,7 +28,7 @@ public class AndroidCaller {
     private final Device mDevice;
     private final Net mNet;
     private final System mSystem;
-    private final ScreenCapture.CaptureHandle mCaptureHandle;
+    private ScreenCapture.CaptureHandle mCaptureHandle;
 
     public AndroidCaller(Context context) {
         mContext = context;
@@ -38,10 +36,7 @@ public class AndroidCaller {
         mDevice = new Device(context);
         mNet = new Net(context);
         mSystem = new System(context);
-        mCaptureHandle = ScreenCapture.getCaptureHandle();
-        if (mCaptureHandle == null) {
-            ScriptLogger.addError(mContext.getString(R.string.screen_capture_unavailable));
-        }
+        mCaptureHandle = ScreenCapture.getCaptureHandle(context);
     }
 
     private void onMessageBox() throws Exception {
@@ -155,10 +150,12 @@ public class AndroidCaller {
                 break;
             case "int":
             case "java.lang.Integer":
+                assert retval != null;
                 jsonResult.put("result", (int) retval);
                 break;
             case "boolean":
             case "java.lang.Boolean":
+                assert retval != null;
                 jsonResult.put("result", (boolean) retval);
                 break;
         }
@@ -173,8 +170,11 @@ public class AndroidCaller {
         int height = mRequest.getInt();
 
         if (mCaptureHandle == null) {
-            mResponse.setErrorCode(Constant.ERR_INVOKE_FAILED);
-            return;
+            mCaptureHandle = ScreenCapture.getCaptureHandle(mContext);
+            if (mCaptureHandle == null) {
+                mResponse.setErrorCode(Constant.ERR_INVOKE_FAILED);
+                return;
+            }
         }
 
         byte[] buf = mCaptureHandle.getScreenPixels(x, y, width, height);

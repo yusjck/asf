@@ -26,7 +26,7 @@ import com.rainman.asf.accessibility.AccessibilityHelper;
 import com.rainman.asf.accessibility.AccessibilityHelperService;
 import com.rainman.asf.activity.MainActivity;
 import com.rainman.asf.core.ScriptActuator;
-import com.rainman.asf.core.screenshot.ScreenCaptureService;
+import com.rainman.asf.core.screenshot.ScreenCapture;
 import com.rainman.asf.util.ToastUtil;
 import com.rainman.asf.view.DrawerMenuItem;
 
@@ -59,30 +59,30 @@ public class DrawerFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         initView(view);
-
-        if (savedInstanceState == null) {
-            if (AccessibilityHelperService.getInstance() != null) {
-                mRequestAccessibility.setChecked(true);
-                mRequestAccessibility.setClickable(false);
-            }
-
-            if (ScreenCaptureService.getInstance() != null) {
-                mRequestScreenCapture.setChecked(true);
-                mRequestScreenCapture.setClickable(false);
-            }
-
-            if (Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(mMainActivity)) {
-                mRequestDrawOverlay.setChecked(true);
-                mRequestDrawOverlay.setClickable(false);
-            }
-
-            App.getInstance().switchFloatingWindow();
-        }
+        App.getInstance().switchFloatingWindow();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
+        if (AccessibilityHelperService.getInstance() != null) {
+            mRequestAccessibility.setChecked(true);
+            mRequestAccessibility.setClickable(false);
+        } else {
+            mRequestAccessibility.setChecked(false);
+            mRequestAccessibility.setClickable(true);
+        }
+
+        mRequestScreenCapture.setChecked(ScreenCapture.isMediaProjectionAvailable());
+
+        if (Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(mMainActivity)) {
+            mRequestDrawOverlay.setChecked(true);
+            mRequestDrawOverlay.setClickable(false);
+        } else {
+            mRequestDrawOverlay.setChecked(false);
+            mRequestDrawOverlay.setClickable(true);
+        }
 
         mFloatingWindowSwitch.setChecked(AppSetting.isFloatingWndEnabled());
         mRemoteControlSwitch.setChecked(AppSetting.isCmdServerEnabled());
@@ -109,6 +109,8 @@ public class DrawerFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     requestScreenCapturePermission();
+                } else {
+                    cancelScreenCapturePermission();
                 }
             }
         });
@@ -171,6 +173,12 @@ public class DrawerFragment extends Fragment {
         }
     }
 
+    private void cancelScreenCapturePermission() {
+        if (Build.VERSION.SDK_INT >= 21) {
+            ScreenCapture.freeMediaProjection();
+        }
+    }
+
     private void requestDrawOverlayPermission() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (!Settings.canDrawOverlays(mMainActivity)) {
@@ -196,11 +204,7 @@ public class DrawerFragment extends Fragment {
             case REQUEST_SCREEN_CAPTURE:
                 if (Build.VERSION.SDK_INT >= 21) {
                     if (resultCode != Activity.RESULT_CANCELED) {
-                        mRequestScreenCapture.setClickable(false);
-                        Intent service = new Intent(mMainActivity, ScreenCaptureService.class);
-                        service.putExtra("code", resultCode);
-                        service.putExtra("data", data);
-                        mMainActivity.startService(service);
+                        ScreenCapture.initMediaProjection(mMainActivity, resultCode, data);
                     } else {
                         mRequestScreenCapture.setChecked(false);
                         ToastUtil.show(mMainActivity, R.string.screen_capture_permission_denied);

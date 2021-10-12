@@ -17,7 +17,7 @@ public class DeviceEvent extends BroadcastReceiver {
     private final List<EventListener> mEventListeners = new LinkedList<>();
     private int mOldVolumeValue = -1;
 
-    public static class EventListener {
+    public static abstract class EventListener {
 
         public void onRotationChanged() {
 

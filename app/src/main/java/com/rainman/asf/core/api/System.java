@@ -28,7 +28,8 @@ import com.rainman.asf.activity.MainActivity;
 import com.rainman.asf.core.ScriptLogger;
 import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.core.database.Script;
-import com.rainman.asf.core.screenshot.ScreenCaptureService;
+import com.rainman.asf.core.screenshot.PermissionRequesterActivity;
+import com.rainman.asf.core.screenshot.ScreenCapture;
 import com.rainman.asf.util.FileUtil;
 import com.rainman.asf.util.RootUtil;
 import com.rainman.asf.util.SystemUtils;
@@ -74,7 +75,14 @@ public class System {
     }
 
     public boolean isCaptureAvailable() {
-        return ScreenCaptureService.getInstance() != null;
+        return ScreenCapture.isMediaProjectionAvailable();
+    }
+
+    public boolean requestCapturePermission() {
+        Intent intent = new Intent(mContext, PermissionRequesterActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        mContext.startActivity(intent);
+        return true;
     }
 
     public boolean isAccessibilityAvailable() {
@@ -136,16 +144,16 @@ public class System {
     }
 
     public boolean startApp(String pkgName, String clsName) {
+        Intent intent;
         if (!clsName.equals("")) {
-            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent = new Intent(Intent.ACTION_MAIN);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
             ComponentName componentName = new ComponentName(pkgName, clsName);
             intent.setComponent(componentName);
-            mContext.startActivity(intent);
         } else {
-            Intent intent = mContext.getPackageManager().getLaunchIntentForPackage(pkgName);
-            mContext.startActivity(intent);
+            intent = mContext.getPackageManager().getLaunchIntentForPackage(pkgName);
         }
+        mContext.startActivity(intent);
         return true;
     }
 

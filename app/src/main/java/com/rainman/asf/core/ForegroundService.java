@@ -18,13 +18,12 @@ import com.rainman.asf.R;
 import com.rainman.asf.activity.MainActivity;
 import com.rainman.asf.activity.OptionActivity;
 import com.rainman.asf.core.database.Script;
-import com.rainman.asf.core.screenshot.ScreenCaptureService;
 
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class ScriptControlService extends Service {
+public class ForegroundService extends Service {
 
     private ScriptManager.ScriptListener mScriptListener;
     private ScriptManager mScriptManager;
@@ -91,7 +90,6 @@ public class ScriptControlService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopService(new Intent(this, ScreenCaptureService.class));
         mScriptManager.unregisterScriptListener(mScriptListener);
         removeNotification();
     }
@@ -156,17 +154,17 @@ public class ScriptControlService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingIntent);
 
-        intent = new Intent(this, ScriptControlService.class);
+        intent = new Intent(this, ForegroundService.class);
         intent.setAction("startScript");
         pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.addAction(R.drawable.ic_start, getString(R.string.start_script), pendingIntent);
 
-        intent = new Intent(this, ScriptControlService.class);
+        intent = new Intent(this, ForegroundService.class);
         intent.setAction("stopScript");
         pendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.addAction(R.drawable.ic_stop, getString(R.string.stop_script), pendingIntent);
 
-        intent = new Intent(this, ScriptControlService.class);
+        intent = new Intent(this, ForegroundService.class);
         intent.setAction("setting");
         pendingIntent = PendingIntent.getService(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.addAction(R.drawable.ic_script_setting, getString(R.string.script_setting), pendingIntent);

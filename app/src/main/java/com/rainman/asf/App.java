@@ -8,17 +8,19 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
-import com.rainman.asf.core.ScriptControlService;
+import com.rainman.asf.core.ForegroundService;
 import com.rainman.asf.core.SchedulerService;
 import com.rainman.asf.core.ScriptActuator;
 import com.rainman.asf.core.ScriptLogger;
 import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.core.VisitorManager;
+import com.rainman.asf.core.screenshot.ScreenCapture;
 
 import org.xutils.x;
 
@@ -98,16 +100,20 @@ public class App extends Application {
         startService(new Intent(this, SchedulerService.class));
 
         // 启动通知栏脚本控制服务
-        ContextCompat.startForegroundService(this, new Intent(this, ScriptControlService.class));
+        ContextCompat.startForegroundService(this, new Intent(this, ForegroundService.class));
 
         mAppInited = true;
     }
 
     public void exitApp() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ScreenCapture.freeMediaProjection();
+        }
+
         mFloatingWindow.dismissWindow();
         ScriptActuator.getInstance().cleanup();
         stopService(new Intent(this, SchedulerService.class));
-        stopService(new Intent(this, ScriptControlService.class));
+        stopService(new Intent(this, ForegroundService.class));
 
         mAppInited = false;
     }

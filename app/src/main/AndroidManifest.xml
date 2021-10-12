@@ -57,12 +57,14 @@
         <activity
                 android:name=".activity.VisitorActivity"
                 android:label="@string/visitor_manage" />
+        <activity
+                android:name=".core.screenshot.PermissionRequesterActivity"
+                android:excludeFromRecents="true" />
 
         <service
-                android:name=".core.ScriptControlService"
+                android:name=".core.ForegroundService"
                 android:foregroundServiceType="mediaProjection" />
         <service android:name=".core.SchedulerService" />
-        <service android:name=".core.screenshot.ScreenCaptureService" />
         <service
                 android:name=".accessibility.AccessibilityHelperService"
                 android:enabled="true"

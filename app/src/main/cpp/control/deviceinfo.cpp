@@ -16,9 +16,7 @@ DeviceInfo::DeviceInfo(Controller *controller)
 }
 
 DeviceInfo::~DeviceInfo()
-{
-
-}
+= default;
 
 int DeviceInfo::SetCaptureMode(int mode)
 {
@@ -62,7 +60,7 @@ int DeviceInfo::ScreenShot(int x, int y, int width, int height, void *outBuf)
 
 	uint32_t len;
 	const void *buf = ctx.ReadBin(len);
-	if ((width - x) * (height - y) * 4 != len)
+	if (width * height * 4 != len)  // 检查截屏后返回的像素缓冲区长度是否正确
 		return ERR_INVOKE_FAILED;
 
 	memcpy(outBuf, buf, len);

@@ -2,11 +2,9 @@ package com.rainman.asf.core;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -15,6 +13,7 @@ import com.rainman.asf.R;
 import com.rainman.asf.core.database.CoreDatabase;
 import com.rainman.asf.core.database.Visitor;
 import com.rainman.asf.core.database.VisitorDao;
+import com.rainman.asf.util.SystemUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -110,30 +109,23 @@ public class VisitorManager {
         }
 
         private void requestPermission() {
-            if (Build.VERSION.SDK_INT >= 23) {
-                if (!Settings.canDrawOverlays(mContext)) {
-                    mVisitor.setAccessPermission(Visitor.PERMISSION_DENIED);
-                    completeAndNotify();
-                }
+            if (!SystemUtils.canDrawOverlays(mContext)) {
+                mVisitor.setAccessPermission(Visitor.PERMISSION_DENIED);
+                completeAndNotify();
+                return;
             }
 
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
             builder.setTitle(R.string.device_access_confirmation)
                     .setMessage(String.format(mContext.getString(R.string.device_access_prompt), mVisitor.getName(), mVisitor.getSignature()))
-                    .setPositiveButton(R.string.dlg_allow, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            mVisitor.setAccessPermission(Visitor.PERMISSION_GRANTED);
-                            mVisitor.setLastAccessTime(new Date().getTime());
-                            completeAndNotify();
-                        }
+                    .setPositiveButton(R.string.dlg_allow, (dialog, which) -> {
+                        mVisitor.setAccessPermission(Visitor.PERMISSION_GRANTED);
+                        mVisitor.setLastAccessTime(new Date().getTime());
+                        completeAndNotify();
                     })
-                    .setNegativeButton(R.string.dlg_deny, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            mVisitor.setAccessPermission(Visitor.PERMISSION_DENIED);
-                            completeAndNotify();
-                        }
+                    .setNegativeButton(R.string.dlg_deny, (dialog, which) -> {
+                        mVisitor.setAccessPermission(Visitor.PERMISSION_DENIED);
+                        completeAndNotify();
                     })
                     .setCancelable(false);
 

@@ -2,7 +2,6 @@ package com.rainman.asf.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
@@ -188,18 +187,16 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
         mDrawerLayout.closeDrawers();
     }
 
-    private boolean checkPermission() {
+    private void checkPermission() {
         String[] permissions = {
                 Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
         };
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             permissions = new String[]{
                     Manifest.permission.READ_PHONE_STATE,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             };
@@ -207,10 +204,9 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
         for (String permission : permissions) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
-                return false;
+                return;
             }
         }
-        return true;
     }
 
     @Override
@@ -238,18 +234,15 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
     private void openAppDetails() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.request_permission_prompt);
-        builder.setPositiveButton(R.string.dlg_manual_authorization, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Intent intent = new Intent();
-                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.addCategory(Intent.CATEGORY_DEFAULT);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-                startActivity(intent);
-            }
+        builder.setPositiveButton(R.string.dlg_manual_authorization, (dialog, which) -> {
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            startActivity(intent);
         });
         builder.setNegativeButton(R.string.dlg_cancel, null);
         builder.show();
@@ -335,9 +328,7 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
                 ToastUtil.show(this, R.string.run_script_prompt);
                 return;
             }
-            if (checkPermission()) {
-                mScriptActuator.startScript();
-            }
+            mScriptActuator.startScript();
         } else {
             mScriptActuator.stopScript();
         }
@@ -402,19 +393,11 @@ public class MainActivity extends AppCompatActivity implements ScriptManager.Scr
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.app_name)
                 .setMessage(R.string.connect_engine_failed_prompt)
-                .setPositiveButton(R.string.dlg_retry, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        mScriptActuator.reconnectNativeEngine();
-                        dialog.dismiss();
-                    }
+                .setPositiveButton(R.string.dlg_retry, (dialog, which) -> {
+                    mScriptActuator.reconnectNativeEngine();
+                    dialog.dismiss();
                 })
-                .setNegativeButton(R.string.dlg_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
+                .setNegativeButton(R.string.dlg_cancel, (dialog, which) -> dialog.dismiss());
         builder.create().show();
     }
 }

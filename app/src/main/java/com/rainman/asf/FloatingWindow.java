@@ -7,7 +7,6 @@ import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.CountDownTimer;
-import android.provider.Settings;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,10 +33,6 @@ public class FloatingWindow {
     private DeviceEvent.EventListener mRotationListener;
 
     public void showWindow(Context context) {
-        if (!(Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(context))) {
-            ToastUtil.show(context, R.string.floating_window_permission_denied);
-            return;
-        }
         if (mWindowManager == null && mView == null) {
             mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             mView = View.inflate(context, R.layout.view_floating_window, null);
@@ -56,21 +51,18 @@ public class FloatingWindow {
 
             initListener(context);
 
-            mView.post(new Runnable() {
-                @Override
-                public void run() {
-                    Point floatBallPos = AppSetting.getFloatingWndPos();
-                    ImageView ivIcon = mView.findViewById(R.id.iv_icon);
-                    mLayoutParams.x = floatBallPos.x;
-                    mLayoutParams.y = floatBallPos.y;
-                    mLayoutParams.width = ivIcon.getMeasuredWidth();
-                    mLayoutParams.height = ivIcon.getMeasuredHeight();
-                    mWindowManager.updateViewLayout(mView, mLayoutParams);
+            mView.post(() -> {
+                Point floatBallPos = AppSetting.getFloatingWndPos();
+                ImageView ivIcon = mView.findViewById(R.id.iv_icon);
+                mLayoutParams.x = floatBallPos.x;
+                mLayoutParams.y = floatBallPos.y;
+                mLayoutParams.width = ivIcon.getMeasuredWidth();
+                mLayoutParams.height = ivIcon.getMeasuredHeight();
+                mWindowManager.updateViewLayout(mView, mLayoutParams);
 
-                    AlphaAnimation alphaAnimation = new AlphaAnimation(0, 1);
-                    alphaAnimation.setDuration(1000);
-                    ivIcon.setAnimation(alphaAnimation);
-                }
+                AlphaAnimation alphaAnimation = new AlphaAnimation(0, 1);
+                alphaAnimation.setDuration(1000);
+                ivIcon.setAnimation(alphaAnimation);
             });
 
             mRotationListener = new DeviceEvent.EventListener() {
@@ -153,23 +145,15 @@ public class FloatingWindow {
             private void stickToSide() {
                 ValueAnimator animator = ValueAnimator.ofInt(mLayoutParams.x, finalMoveX).setDuration(500);
                 animator.setInterpolator(new BounceInterpolator());
-                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator animation) {
-                        mLayoutParams.x = (int) animation.getAnimatedValue();
-                        mWindowManager.updateViewLayout(mView, mLayoutParams);
-                    }
+                animator.addUpdateListener(animation -> {
+                    mLayoutParams.x = (int) animation.getAnimatedValue();
+                    mWindowManager.updateViewLayout(mView, mLayoutParams);
                 });
                 animator.start();
             }
         });
 
-        mView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mFloatingMenu.openMenu(v.getContext());
-            }
-        });
+        mView.setOnClickListener(v -> mFloatingMenu.openMenu(v.getContext()));
     }
 
     private class FloatingMenu {
@@ -196,55 +180,36 @@ public class FloatingWindow {
                 mMenuLayoutParams.y = mLayoutParams.y;
                 mWindowManager.addView(mMenuView, mMenuLayoutParams);
 
-                mMenuView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        runMenuAnimator();
-                    }
-                });
+                mMenuView.post(this::runMenuAnimator);
 
                 View ivStart = mMenuView.findViewById(R.id.iv_start);
-                ivStart.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ScriptActuator.getInstance().startScript();
-                        closeMenu();
-                    }
+                ivStart.setOnClickListener(v -> {
+                    ScriptActuator.getInstance().startScript();
+                    closeMenu();
                 });
 
                 View ivStop = mMenuView.findViewById(R.id.iv_stop);
-                ivStop.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ScriptActuator.getInstance().stopScript();
-                        closeMenu();
-                    }
+                ivStop.setOnClickListener(v -> {
+                    ScriptActuator.getInstance().stopScript();
+                    closeMenu();
                 });
 
                 View ivSetting = mMenuView.findViewById(R.id.iv_setting);
-                ivSetting.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Script script = ScriptManager.getInstance().getCurrentScript();
-                        if (script == null) {
-                            ToastUtil.show(context, R.string.no_script_selected);
-                        } else {
-                            Intent intent = new Intent(context, OptionActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            intent.putExtra("script_id", script.getId());
-                            context.startActivity(intent);
-                        }
-                        closeMenu();
+                ivSetting.setOnClickListener(v -> {
+                    Script script = ScriptManager.getInstance().getCurrentScript();
+                    if (script == null) {
+                        ToastUtil.show(context, R.string.no_script_selected);
+                    } else {
+                        Intent intent = new Intent(context, OptionActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.putExtra("script_id", script.getId());
+                        context.startActivity(intent);
                     }
+                    closeMenu();
                 });
 
                 View ivClose = mMenuView.findViewById(R.id.iv_close);
-                ivClose.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        closeMenu();
-                    }
-                });
+                ivClose.setOnClickListener(v -> closeMenu());
 
                 mCountDownTimer = new CountDownTimer(3000, 1000) {
                     @Override
@@ -279,12 +244,9 @@ public class FloatingWindow {
 
             // 执行菜单从屏幕外则移入屏幕动画
             ValueAnimator animator = ValueAnimator.ofInt(startX, endX).setDuration(300);
-            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    mMenuLayoutParams.x = (int) animation.getAnimatedValue();
-                    mWindowManager.updateViewLayout(mMenuView, mMenuLayoutParams);
-                }
+            animator.addUpdateListener(animation -> {
+                mMenuLayoutParams.x = (int) animation.getAnimatedValue();
+                mWindowManager.updateViewLayout(mMenuView, mMenuLayoutParams);
             });
             animator.start();
         }

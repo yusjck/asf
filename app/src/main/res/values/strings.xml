@@ -80,7 +80,7 @@
     <string name="update_script_successful">脚本更新完成</string>
     <string name="download_script_failed">下载失败</string>
     <string name="downloading">正在下载中…</string>
-    <string name="request_permission_prompt"><![CDATA[脚本运行需要访问 “电话”、“外部存储器”、“位置信息”，请到 “应用信息 -> 权限” 中授予！]]></string>
+    <string name="request_permission_prompt"><![CDATA[部分脚本功能可能会用到 “电话”、“位置信息”，请到 “应用信息 -> 权限” 中授予！]]></string>
     <string name="dlg_manual_authorization">去手动授权</string>
     <string name="run_script_prompt">请先选择要运行的脚本</string>
     <string name="dlg_retry">重试</string>

@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.os.Environment;
 import android.os.PowerManager;
 import android.telephony.TelephonyManager;
 import android.view.Display;
@@ -22,6 +21,8 @@ import com.rainman.asf.util.SystemUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
 
 @Keep
 public class Device {
@@ -102,7 +103,8 @@ public class Device {
     }
 
     public String getSDCardPath() {
-        return Environment.getExternalStorageDirectory().getPath();
+        File externalFilesDir = mContext.getExternalFilesDir(null);
+        return externalFilesDir != null ? externalFilesDir.getPath() : null;
     }
 
     public boolean isDeviceLocked() {

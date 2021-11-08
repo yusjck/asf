@@ -21,6 +21,7 @@ import com.rainman.asf.core.ScriptLogger;
 import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.core.VisitorManager;
 import com.rainman.asf.core.screenshot.ScreenCapture;
+import com.rainman.asf.util.SystemUtils;
 
 import org.xutils.x;
 
@@ -78,10 +79,14 @@ public class App extends Application {
     }
 
     public void switchFloatingWindow() {
-        if (AppSetting.isFloatingWndEnabled()) {
-            mFloatingWindow.showWindow(this);
+        if (!SystemUtils.canDrawOverlays(this)) {
+            AppSetting.setFloatingWndEnabled(false);
         } else {
-            mFloatingWindow.dismissWindow();
+            if (AppSetting.isFloatingWndEnabled()) {
+                mFloatingWindow.showWindow(this);
+            } else {
+                mFloatingWindow.dismissWindow();
+            }
         }
     }
 
@@ -120,12 +125,9 @@ public class App extends Application {
 
     private void initShake() {
         mShakeListener = new ShakeListener(this);
-        mShakeListener.setOnShakeListener(new ShakeListener.OnShakeListener() {
-            @Override
-            public void onShake() {
-                if (AppSetting.isStopWhenWaggling()) {
-                    ScriptActuator.getInstance().stopScript();
-                }
+        mShakeListener.setOnShakeListener(() -> {
+            if (AppSetting.isStopWhenWaggling()) {
+                ScriptActuator.getInstance().stopScript();
             }
         });
         mShakeListener.start();

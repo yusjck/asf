@@ -2,7 +2,6 @@ package com.rainman.asf.fragment;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
@@ -12,8 +11,9 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -27,14 +27,11 @@ import com.rainman.asf.accessibility.AccessibilityHelperService;
 import com.rainman.asf.activity.MainActivity;
 import com.rainman.asf.core.ScriptActuator;
 import com.rainman.asf.core.screenshot.ScreenCapture;
+import com.rainman.asf.util.SystemUtils;
 import com.rainman.asf.util.ToastUtil;
 import com.rainman.asf.view.DrawerMenuItem;
 
 public class DrawerFragment extends Fragment {
-
-    private static final int REQUEST_ACCESSIBILITY = 100;
-    private static final int REQUEST_SCREEN_CAPTURE = 101;
-    private static final int REQUEST_DRAW_OVERLAY = 102;
 
     private MainActivity mMainActivity;
 
@@ -44,6 +41,10 @@ public class DrawerFragment extends Fragment {
     private DrawerMenuItem mFloatingWindowSwitch;
     private DrawerMenuItem mRemoteControlSwitch;
     private final ViewClickListener mViewClickListener = new ViewClickListener();
+
+    private ActivityResultLauncher<Intent> mRequestAccessibilityLauncher;
+    private ActivityResultLauncher<Intent> mRequestScreenCaptureLauncher;
+    private ActivityResultLauncher<Intent> mRequestDrawOverlayLauncher;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -76,7 +77,7 @@ public class DrawerFragment extends Fragment {
 
         mRequestScreenCapture.setChecked(ScreenCapture.isMediaProjectionAvailable());
 
-        if (Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(mMainActivity)) {
+        if (SystemUtils.canDrawOverlays(mMainActivity)) {
             mRequestDrawOverlay.setChecked(true);
             mRequestDrawOverlay.setClickable(false);
         } else {
@@ -95,49 +96,39 @@ public class DrawerFragment extends Fragment {
         mFloatingWindowSwitch = view.findViewById(R.id.floating_window_switch);
         mRemoteControlSwitch = view.findViewById(R.id.remote_control_switch);
 
-        mRequestAccessibility.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    requestAccessibilityPermission();
-                }
+        mRequestAccessibility.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                requestAccessibilityPermission();
             }
         });
 
-        mRequestScreenCapture.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    requestScreenCapturePermission();
-                } else {
-                    cancelScreenCapturePermission();
-                }
+        mRequestScreenCapture.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                requestScreenCapturePermission();
+            } else {
+                cancelScreenCapturePermission();
             }
         });
 
-        mRequestDrawOverlay.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    requestDrawOverlayPermission();
-                }
+        mRequestDrawOverlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                requestDrawOverlayPermission();
             }
         });
 
-        mFloatingWindowSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                AppSetting.setFloatingWndEnabled(isChecked);
+        mFloatingWindowSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            AppSetting.setFloatingWndEnabled(isChecked);
+            if (!isChecked || SystemUtils.canDrawOverlays(mMainActivity)) {
                 App.getInstance().switchFloatingWindow();
+            } else {
+                // 用户打开悬浮窗但没有权限时先申请权限
+                requestDrawOverlayPermission();
             }
         });
 
-        mRemoteControlSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                AppSetting.setCmdServerEnabled(isChecked);
-                ScriptActuator.getInstance().switchCmdServer();
-            }
+        mRemoteControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            AppSetting.setCmdServerEnabled(isChecked);
+            ScriptActuator.getInstance().switchCmdServer();
         });
 
         view.findViewById(R.id.switch_to_script_view).setOnClickListener(mViewClickListener);
@@ -145,19 +136,49 @@ public class DrawerFragment extends Fragment {
         view.findViewById(R.id.switch_to_scheduler_view).setOnClickListener(mViewClickListener);
         view.findViewById(R.id.app_setting).setOnClickListener(mViewClickListener);
         view.findViewById(R.id.app_exit).setOnClickListener(mViewClickListener);
+
+        mRequestAccessibilityLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            try {
+                AccessibilityHelper accessibilityHelper = new AccessibilityHelper(mMainActivity);
+                accessibilityHelper.ensureAccessibilityServiceEnabled();
+                mRequestAccessibility.setClickable(false);
+            } catch (Exception e) {
+                ToastUtil.show(mMainActivity, e.getMessage());
+                mRequestAccessibility.setChecked(false);
+            }
+        });
+
+        mRequestScreenCaptureLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() != Activity.RESULT_CANCELED) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    ScreenCapture.initMediaProjection(mMainActivity, result.getResultCode(), result.getData());
+                }
+            } else {
+                mRequestScreenCapture.setChecked(false);
+                ToastUtil.show(mMainActivity, R.string.screen_capture_permission_denied);
+            }
+        });
+
+        mRequestDrawOverlayLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (SystemUtils.canDrawOverlays(mMainActivity)) {
+                mRequestDrawOverlay.setClickable(false);
+                App.getInstance().switchFloatingWindow();
+            } else {
+                mRequestDrawOverlay.setChecked(false);
+                AppSetting.setFloatingWndEnabled(false);
+                mFloatingWindowSwitch.setChecked(false);
+                ToastUtil.show(mMainActivity, R.string.draw_overlay_permission_denied);
+            }
+        });
     }
 
     private void requestAccessibilityPermission() {
         AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
         builder.setTitle(R.string.dlg_propmt)
                 .setMessage(R.string.request_accessibility_prompt)
-                .setPositiveButton(R.string.dlg_go_to_open, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                        startActivityForResult(intent, REQUEST_ACCESSIBILITY);
-                        dialog.dismiss();
-                    }
+                .setPositiveButton(R.string.dlg_go_to_open, (dialog, which) -> {
+                    mRequestAccessibilityLauncher.launch(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+                    dialog.dismiss();
                 })
                 .setCancelable(false);
         builder.create().show();
@@ -166,7 +187,7 @@ public class DrawerFragment extends Fragment {
     private void requestScreenCapturePermission() {
         if (Build.VERSION.SDK_INT >= 21) {
             MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) mMainActivity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-            startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), REQUEST_SCREEN_CAPTURE);
+            mRequestScreenCaptureLauncher.launch(mediaProjectionManager.createScreenCaptureIntent());
         } else {
             mRequestScreenCapture.setChecked(false);
             ToastUtil.show(mMainActivity, R.string.system_function_not_supported);
@@ -180,50 +201,9 @@ public class DrawerFragment extends Fragment {
     }
 
     private void requestDrawOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (!Settings.canDrawOverlays(mMainActivity)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + mMainActivity.getPackageName()));
-                startActivityForResult(intent, REQUEST_DRAW_OVERLAY);
-            }
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_ACCESSIBILITY:
-                try {
-                    AccessibilityHelper accessibilityHelper = new AccessibilityHelper(mMainActivity);
-                    accessibilityHelper.ensureAccessibilityServiceEnabled();
-                    mRequestAccessibility.setClickable(false);
-                } catch (Exception e) {
-                    ToastUtil.show(mMainActivity, e.getMessage());
-                    mRequestAccessibility.setChecked(false);
-                }
-                break;
-            case REQUEST_SCREEN_CAPTURE:
-                if (Build.VERSION.SDK_INT >= 21) {
-                    if (resultCode != Activity.RESULT_CANCELED) {
-                        ScreenCapture.initMediaProjection(mMainActivity, resultCode, data);
-                    } else {
-                        mRequestScreenCapture.setChecked(false);
-                        ToastUtil.show(mMainActivity, R.string.screen_capture_permission_denied);
-                    }
-                }
-                break;
-            case REQUEST_DRAW_OVERLAY:
-                if (Build.VERSION.SDK_INT >= 23) {
-                    if (Settings.canDrawOverlays(mMainActivity)) {
-                        mRequestDrawOverlay.setClickable(false);
-                        App.getInstance().switchFloatingWindow();
-                    } else {
-                        mRequestDrawOverlay.setChecked(false);
-                        ToastUtil.show(mMainActivity, R.string.draw_overlay_permission_denied);
-                    }
-                }
-                break;
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
+        if (!SystemUtils.canDrawOverlays(mMainActivity)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + mMainActivity.getPackageName()));
+            mRequestDrawOverlayLauncher.launch(intent);
         }
     }
 

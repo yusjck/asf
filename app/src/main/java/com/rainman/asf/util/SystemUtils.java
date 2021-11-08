@@ -8,6 +8,7 @@ import android.net.wifi.WifiManager;
 import android.os.*;
 import android.provider.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
 
 import android.text.TextUtils;
@@ -22,6 +23,7 @@ import dalvik.system.PathClassLoader;
 
 import java.io.*;
 import java.util.Locale;
+import java.util.Objects;
 
 public class SystemUtils {
 
@@ -69,10 +71,6 @@ public class SystemUtils {
 
     /**
      * 将assets中的文件释放到cache目录中并返回缓存文件路径
-     *
-     * @param context
-     * @param fileName
-     * @return
      */
     public static String getAssetsCacheFile(Context context, String fileName) {
         String cacheFileName = fileName;
@@ -124,19 +122,11 @@ public class SystemUtils {
         final AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.script_prompt)
                 .setMessage(msg)
-                .setPositiveButton(R.string.dlg_confirm, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                })
+                .setPositiveButton(R.string.dlg_confirm, (dialog, which) -> dialog.cancel())
                 .setCancelable(false)
-                .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        synchronized (signal) {
-                            signal.notify();
-                        }
+                .setOnCancelListener(dialog -> {
+                    synchronized (signal) {
+                        signal.notify();
                     }
                 });
 
@@ -144,7 +134,7 @@ public class SystemUtils {
             private AlertDialog mDialog = null;
 
             @Override
-            public void handleMessage(Message msg) {
+            public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
 
                 if (mDialog == null) {
@@ -193,12 +183,7 @@ public class SystemUtils {
 
     public static void showMessage(final Context context, final String msg) {
         Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-            }
-        });
+        handler.post(() -> Toast.makeText(context, msg, Toast.LENGTH_SHORT).show());
     }
 
     public static void vibrate(Context context, int duration) {
@@ -223,12 +208,16 @@ public class SystemUtils {
 
     public static String getForegroundPackage(Context context) {
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        return manager.getRunningTasks(1).get(0).topActivity.getPackageName();
+        return Objects.requireNonNull(manager.getRunningTasks(1).get(0).topActivity).getPackageName();
     }
 
     public static String getWifiIp(Context context) {
         WifiManager manager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         int ipAddress = manager.getConnectionInfo().getIpAddress();
         return (ipAddress & 0xFF) + "." + (ipAddress >> 8 & 0xFF) + "." + (ipAddress >> 16 & 0xFF) + "." + (ipAddress >> 24 & 0xFF);
+    }
+
+    public static boolean canDrawOverlays(Context context) {
+        return Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(context);
     }
 }

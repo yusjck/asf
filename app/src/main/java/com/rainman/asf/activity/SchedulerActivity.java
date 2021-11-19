@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -13,13 +12,12 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.rainman.asf.R;
 import com.rainman.asf.core.SchedulerService;
@@ -37,7 +35,7 @@ public class SchedulerActivity extends AppCompatActivity {
     private TimePicker mTimePicker;
     private TextView tvRepeat;
     private TextView tvScript;
-    private Switch swPrivateConfig;
+    private SwitchCompat swPrivateConfig;
     private TextView tvShowPrivateConfig;
     private int mRepeat;
     private ServiceConnection mServiceConnection;
@@ -68,12 +66,9 @@ public class SchedulerActivity extends AppCompatActivity {
         tvRepeat = findViewById(R.id.tv_repeat);
         tvScript = findViewById(R.id.tv_script);
         swPrivateConfig = findViewById(R.id.sw_private_config);
-        swPrivateConfig.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mScheduler.setConfigEnabled(isChecked);
-                tvShowPrivateConfig.setTextColor(isChecked ? 0xFF000000 : 0xFFCCCCCC);
-            }
+        swPrivateConfig.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mScheduler.setConfigEnabled(isChecked);
+            tvShowPrivateConfig.setTextColor(isChecked ? 0xFF000000 : 0xFFCCCCCC);
         });
         tvShowPrivateConfig = findViewById(R.id.tv_show_private_config);
 
@@ -146,15 +141,15 @@ public class SchedulerActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.action_save) {
+            if (saveScheduler()) {
                 finish();
-                return true;
-            case R.id.action_save:
-                if (saveScheduler()) {
-                    finish();
-                }
-                return true;
+            }
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -189,24 +184,21 @@ public class SchedulerActivity extends AppCompatActivity {
 
     public void onRepeatClick(View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(R.array.repeat_frequency, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0:
-                        mScheduler.setRepeat(0);
-                        updateRepeatWidget();
-                        break;
-                    case 1:
-                        mScheduler.setRepeat(127);
-                        updateRepeatWidget();
-                        break;
-                    case 2:
-                        onSelectDaysOfWeek();
-                        break;
-                }
-                dialog.dismiss();
+        builder.setItems(R.array.repeat_frequency, (dialog, which) -> {
+            switch (which) {
+                case 0:
+                    mScheduler.setRepeat(0);
+                    updateRepeatWidget();
+                    break;
+                case 1:
+                    mScheduler.setRepeat(127);
+                    updateRepeatWidget();
+                    break;
+                case 2:
+                    onSelectDaysOfWeek();
+                    break;
             }
+            dialog.dismiss();
         });
         builder.show();
     }
@@ -219,30 +211,19 @@ public class SchedulerActivity extends AppCompatActivity {
             checkedItems[i] = (mRepeat & (1 << i)) != 0;
         }
 
-        builder.setMultiChoiceItems(R.array.week, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                if (isChecked) {
-                    mRepeat |= (1 << which);
-                } else {
-                    mRepeat &= ~(1 << which);
-                }
+        builder.setMultiChoiceItems(R.array.week, checkedItems, (dialog, which, isChecked) -> {
+            if (isChecked) {
+                mRepeat |= (1 << which);
+            } else {
+                mRepeat &= ~(1 << which);
             }
         });
 
-        builder.setNegativeButton(R.string.dlg_cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-        builder.setPositiveButton(R.string.dlg_confirm, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                mScheduler.setRepeat(mRepeat);
-                updateRepeatWidget();
-                dialog.dismiss();
-            }
+        builder.setNegativeButton(R.string.dlg_cancel, (dialog, which) -> dialog.dismiss());
+        builder.setPositiveButton(R.string.dlg_confirm, (dialog, which) -> {
+            mScheduler.setRepeat(mRepeat);
+            updateRepeatWidget();
+            dialog.dismiss();
         });
         builder.show();
     }
@@ -254,14 +235,11 @@ public class SchedulerActivity extends AppCompatActivity {
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(items, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Script script = mScriptList.get(which);
-                mScheduler.setScriptId(script.getId());
-                updateScriptWidget();
-                dialog.dismiss();
-            }
+        builder.setItems(items, (dialog, which) -> {
+            Script script = mScriptList.get(which);
+            mScheduler.setScriptId(script.getId());
+            updateScriptWidget();
+            dialog.dismiss();
         });
         builder.show();
         swPrivateConfig.setChecked(false);
@@ -290,21 +268,13 @@ public class SchedulerActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.save_scheduler_confirmation)
                     .setMessage(R.string.save_scheduler_confirmation_prompt)
-                    .setPositiveButton(R.string.dlg_confirm, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (saveScheduler()) {
-                                showPrivateConfig();
-                            }
-                            dialog.dismiss();
+                    .setPositiveButton(R.string.dlg_confirm, (dialog, which) -> {
+                        if (saveScheduler()) {
+                            showPrivateConfig();
                         }
+                        dialog.dismiss();
                     })
-                    .setNegativeButton(R.string.dlg_cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
+                    .setNegativeButton(R.string.dlg_cancel, (dialog, which) -> dialog.dismiss());
             builder.create().show();
         } else {
             showPrivateConfig();

@@ -1,7 +1,7 @@
 package com.rainman.asf.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,10 +16,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,8 +41,6 @@ import java.util.List;
 
 public class ScriptFragment extends BaseFragment {
 
-    private static final int IMPORT_SCRIPT = 200;
-    private static final int UPDATE_SCRIPT = 201;
     private RecyclerView rvScriptList;
     private ScriptAdapter mScriptAdapter;
     private ScriptManager mScriptManager;
@@ -83,18 +84,34 @@ public class ScriptFragment extends BaseFragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_update:
-                onUpdateScriptClick(mMenuSelectedScript);
-                return true;
-            case R.id.action_delete:
-                onDeleteScriptClick(mMenuSelectedScript);
-                return true;
-            case R.id.action_help:
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_update) {
+            onUpdateScriptClick(mMenuSelectedScript);
+            return true;
+        } else if (itemId == R.id.action_delete) {
+            onDeleteScriptClick(mMenuSelectedScript);
+            return true;
+        } else if (itemId == R.id.action_help) {
+            return true;
         }
         return super.onContextItemSelected(item);
     }
+
+    private final ActivityResultLauncher<Intent> mUpdateScriptLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    assert data != null;
+                    Uri uri = data.getData();
+                    if (uri != null) {
+                        ScriptImportHelper scriptImportHelper = new ScriptImportHelper(getContext());
+                        if (!scriptImportHelper.updateLocalScript(mMenuSelectedScript.getId(), uri)) {
+                            ToastUtil.show(getContext(), R.string.file_import_failed);
+                        }
+                    }
+                }
+
+            });
 
     private void onUpdateScriptClick(Script script) {
         // 如果是下载的脚本则跳转到脚本下载页面更新
@@ -106,7 +123,7 @@ public class ScriptFragment extends BaseFragment {
         Intent intent = new Intent();
         intent.setType("*/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(intent, UPDATE_SCRIPT);
+        mUpdateScriptLauncher.launch(intent);
         ToastUtil.showLong(getContext(), R.string.import_update_prompt);
     }
 
@@ -119,26 +136,18 @@ public class ScriptFragment extends BaseFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
         builder.setTitle(R.string.delete_confirmation)
                 .setMessage(String.format(mMainActivity.getString(R.string.delete_confirmation_prompt), script.getName()))
-                .setPositiveButton(R.string.dlg_confirm, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // 删除脚本
-                        if (mScriptManager.deleteScript(script.getId())) {
-                            // 删除相关联的运行计划
-                            Intent service = new Intent(mMainActivity, SchedulerService.class);
-                            service.setAction("deleteScriptScheduler");
-                            service.putExtra("script_id", script.getId());
-                            mMainActivity.startService(service);
-                        }
-                        dialog.dismiss();
+                .setPositiveButton(R.string.dlg_confirm, (dialog, which) -> {
+                    // 删除脚本
+                    if (mScriptManager.deleteScript(script.getId())) {
+                        // 删除相关联的运行计划
+                        Intent service = new Intent(mMainActivity, SchedulerService.class);
+                        service.setAction("deleteScriptScheduler");
+                        service.putExtra("script_id", script.getId());
+                        mMainActivity.startService(service);
                     }
+                    dialog.dismiss();
                 })
-                .setNegativeButton(R.string.dlg_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
+                .setNegativeButton(R.string.dlg_cancel, (dialog, which) -> dialog.dismiss());
         builder.create().show();
     }
 
@@ -156,40 +165,26 @@ public class ScriptFragment extends BaseFragment {
         mMainActivity.displayFragment(schedulerFragment);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == IMPORT_SCRIPT) {
-            if (resultCode == Activity.RESULT_OK) {
-                Uri uri = data.getData();
-                if (uri != null) {
-                    ScriptImportHelper scriptImportHelper = new ScriptImportHelper(getContext());
-                    if (!scriptImportHelper.importLocalScript(uri)) {
-                        ToastUtil.show(getContext(), R.string.file_import_failed);
+    private final ActivityResultLauncher<Intent> mImportScriptLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    assert data != null;
+                    Uri uri = data.getData();
+                    if (uri != null) {
+                        ScriptImportHelper scriptImportHelper = new ScriptImportHelper(getContext());
+                        if (!scriptImportHelper.importLocalScript(uri)) {
+                            ToastUtil.show(getContext(), R.string.file_import_failed);
+                        }
                     }
                 }
-            }
-            return;
-        }
-        if (requestCode == UPDATE_SCRIPT) {
-            if (resultCode == Activity.RESULT_OK) {
-                Uri uri = data.getData();
-                if (uri != null) {
-                    ScriptImportHelper scriptImportHelper = new ScriptImportHelper(getContext());
-                    if (!scriptImportHelper.updateLocalScript(mMenuSelectedScript.getId(), uri)) {
-                        ToastUtil.show(getContext(), R.string.file_import_failed);
-                    }
-                }
-            }
-            return;
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
+            });
 
     private void onImportScriptClick() {
         Intent intent = new Intent();
         intent.setType("*/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(intent, IMPORT_SCRIPT);
+        mImportScriptLauncher.launch(intent);
         ToastUtil.showLong(getContext(), R.string.import_file_prompt);
     }
 
@@ -199,16 +194,16 @@ public class ScriptFragment extends BaseFragment {
 
     @Override
     public boolean onMenuItemClick(MenuItem menuItem) {
-        switch (menuItem.getItemId()) {
-            case R.id.action_import_script:
-                onImportScriptClick();
-                return true;
-            case R.id.action_download_script:
-                onDownloadScriptClick();
-                return true;
-            case R.id.action_show_logs:
-                mMainActivity.displayFragment(new LogFragment());
-                return true;
+        int itemId = menuItem.getItemId();
+        if (itemId == R.id.action_import_script) {
+            onImportScriptClick();
+            return true;
+        } else if (itemId == R.id.action_download_script) {
+            onDownloadScriptClick();
+            return true;
+        } else if (itemId == R.id.action_show_logs) {
+            mMainActivity.displayFragment(new LogFragment());
+            return true;
         }
         return false;
     }
@@ -246,11 +241,7 @@ public class ScriptFragment extends BaseFragment {
             for (int i = 0; i < mScriptList.size(); i++) {
                 ViewHolder holder = (ViewHolder) rvScriptList.findViewHolderForLayoutPosition(i);
                 if (holder != null) {
-                    if (holder.mScript.getId() == selectedId) {
-                        holder.itemView.setSelected(true);
-                    } else {
-                        holder.itemView.setSelected(false);
-                    }
+                    holder.itemView.setSelected(holder.mScript.getId() == selectedId);
                 }
             }
         }
@@ -260,6 +251,7 @@ public class ScriptFragment extends BaseFragment {
 
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         void reloadData() {
             mScriptList = mScriptManager.getAllScripts();
             notifyDataSetChanged();
@@ -287,18 +279,8 @@ public class ScriptFragment extends BaseFragment {
 
                 itemView.setOnClickListener(this);
                 itemView.setOnCreateContextMenuListener(this);
-                iv_scheduler.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onScriptSchedulerClick(mScript);
-                    }
-                });
-                iv_setting.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onScriptOptionClick(mScript);
-                    }
-                });
+                iv_scheduler.setOnClickListener(v -> onScriptSchedulerClick(mScript));
+                iv_setting.setOnClickListener(v -> onScriptOptionClick(mScript));
             }
 
             void bindData(Script script) {
@@ -337,13 +319,8 @@ public class ScriptFragment extends BaseFragment {
                     tv_status.setTextColor(0xFFBBBBBB);
                 }
 
-                if (mScriptManager.getCurrentScriptId() == script.getId()) {
-                    itemView.setSelected(true);
-                } else {
-                    itemView.setSelected(false);
-                }
-
-                iv_setting.setImageDrawable(getResources().getDrawable(R.drawable.ic_script_setting));
+                itemView.setSelected(mScriptManager.getCurrentScriptId() == script.getId());
+                iv_setting.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_script_setting, null));
             }
 
             @Override

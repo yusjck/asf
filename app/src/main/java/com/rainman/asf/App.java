@@ -21,7 +21,7 @@ import com.rainman.asf.core.ScriptLogger;
 import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.core.VisitorManager;
 import com.rainman.asf.core.screenshot.ScreenCapture;
-import com.rainman.asf.util.SystemUtils;
+import com.rainman.asf.util.Compat;
 
 import org.xutils.x;
 
@@ -79,7 +79,7 @@ public class App extends Application {
     }
 
     public void switchFloatingWindow() {
-        if (!SystemUtils.canDrawOverlays(this)) {
+        if (!Compat.canDrawOverlays(this)) {
             AppSetting.setFloatingWndEnabled(false);
         } else {
             if (AppSetting.isFloatingWndEnabled()) {

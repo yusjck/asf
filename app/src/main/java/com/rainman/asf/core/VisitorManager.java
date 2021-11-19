@@ -13,7 +13,7 @@ import com.rainman.asf.R;
 import com.rainman.asf.core.database.CoreDatabase;
 import com.rainman.asf.core.database.Visitor;
 import com.rainman.asf.core.database.VisitorDao;
-import com.rainman.asf.util.SystemUtils;
+import com.rainman.asf.util.Compat;
 
 import java.util.Date;
 import java.util.List;
@@ -109,7 +109,7 @@ public class VisitorManager {
         }
 
         private void requestPermission() {
-            if (!SystemUtils.canDrawOverlays(mContext)) {
+            if (!Compat.canDrawOverlays(mContext)) {
                 mVisitor.setAccessPermission(Visitor.PERMISSION_DENIED);
                 completeAndNotify();
                 return;

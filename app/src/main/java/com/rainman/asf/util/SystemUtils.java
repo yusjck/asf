@@ -216,8 +216,4 @@ public class SystemUtils {
         int ipAddress = manager.getConnectionInfo().getIpAddress();
         return (ipAddress & 0xFF) + "." + (ipAddress >> 8 & 0xFF) + "." + (ipAddress >> 16 & 0xFF) + "." + (ipAddress >> 24 & 0xFF);
     }
-
-    public static boolean canDrawOverlays(Context context) {
-        return Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(context);
-    }
 }

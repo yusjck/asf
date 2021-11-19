@@ -11,8 +11,9 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.provider.Settings;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.preference.SwitchPreference;
 import androidx.preference.Preference;
@@ -33,7 +34,6 @@ import java.util.Locale;
 
 public class SettingFragment extends PreferenceFragmentCompat {
 
-    private static final int REQUEST_IGNORE_BATTERY_OPTIMIZATIONS = 100;
     private Activity mActivity;
     private Preference mShowAuthorizedDevices;
     private SwitchPreference mBackgroudWhiteList;
@@ -51,17 +51,9 @@ public class SettingFragment extends PreferenceFragmentCompat {
 
         SwitchPreference spRunByRoot = findPreference("run_by_root");
         assert spRunByRoot != null;
-        spRunByRoot.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object o) {
-                new Handler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        ScriptActuator.getInstance().switchEngine();
-                    }
-                });
-                return true;
-            }
+        spRunByRoot.setOnPreferenceChangeListener((preference, o) -> {
+            new Handler().post(() -> ScriptActuator.getInstance().switchEngine());
+            return true;
         });
 
         if (!RootUtil.haveRoot()) {
@@ -73,39 +65,25 @@ public class SettingFragment extends PreferenceFragmentCompat {
         assert spEnableCmdServer != null;
         final SwitchPreference spEnableAccesssAuthorization = findPreference("enable_accesss_authorization");
         assert spEnableAccesssAuthorization != null;
-        spEnableCmdServer.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object o) {
-                new Handler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        ScriptActuator.getInstance().switchCmdServer();
-                    }
-                });
-                spEnableAccesssAuthorization.setEnabled((boolean) o);
-                return true;
-            }
+        spEnableCmdServer.setOnPreferenceChangeListener((preference, o) -> {
+            new Handler().post(() -> ScriptActuator.getInstance().switchCmdServer());
+            spEnableAccesssAuthorization.setEnabled((boolean) o);
+            return true;
         });
         spEnableAccesssAuthorization.setEnabled(AppSetting.isCmdServerEnabled());
 
         mShowAuthorizedDevices = findPreference("show_authorized_devices");
         assert mShowAuthorizedDevices != null;
-        mShowAuthorizedDevices.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                startActivity(new Intent(mActivity, VisitorActivity.class));
-                return true;
-            }
+        mShowAuthorizedDevices.setOnPreferenceClickListener(preference -> {
+            startActivity(new Intent(mActivity, VisitorActivity.class));
+            return true;
         });
 
         Preference aboutApp = findPreference("about_app");
         assert aboutApp != null;
-        aboutApp.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                startActivity(new Intent(mActivity, AboutActivity.class));
-                return true;
-            }
+        aboutApp.setOnPreferenceClickListener(preference -> {
+            startActivity(new Intent(mActivity, AboutActivity.class));
+            return true;
         });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -116,14 +94,11 @@ public class SettingFragment extends PreferenceFragmentCompat {
             } else {
                 mBackgroudWhiteList.setChecked(false);
                 mBackgroudWhiteList.setEnabled(true);
-                mBackgroudWhiteList.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                    @Override
-                    public boolean onPreferenceChange(Preference preference, Object newValue) {
-                        if ((boolean) newValue) {
-                            requestIgnoreBatteryOptimizations();
-                        }
-                        return true;
+                mBackgroudWhiteList.setOnPreferenceChangeListener((preference, newValue) -> {
+                    if ((boolean) newValue) {
+                        requestIgnoreBatteryOptimizations();
                     }
+                    return true;
                 });
             }
         }
@@ -156,28 +131,26 @@ public class SettingFragment extends PreferenceFragmentCompat {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
+    private final ActivityResultLauncher<Intent> mRequestIgnoreBatteryOptimizationsLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    if (isIgnoringBatteryOptimizations()) {
+                        mBackgroudWhiteList.setChecked(true);
+                        mBackgroudWhiteList.setEnabled(false);
+                        return;
+                    }
+                }
+                mBackgroudWhiteList.setChecked(false);
+            });
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public void requestIgnoreBatteryOptimizations() {
         try {
             @SuppressLint("BatteryLife") Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + mActivity.getPackageName()));
-            startActivityForResult(intent, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+            mRequestIgnoreBatteryOptimizationsLauncher.launch(intent);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && requestCode == REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (isIgnoringBatteryOptimizations()) {
-                    mBackgroudWhiteList.setChecked(true);
-                    mBackgroudWhiteList.setEnabled(false);
-                    return;
-                }
-            }
-            mBackgroudWhiteList.setChecked(false);
         }
     }
 }

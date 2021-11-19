@@ -21,11 +21,12 @@ import com.rainman.asf.core.database.CoreDatabase;
 import com.rainman.asf.core.database.Scheduler;
 import com.rainman.asf.core.database.SchedulerDao;
 import com.rainman.asf.core.database.Script;
+import com.rainman.asf.util.Compat;
+import com.rainman.asf.util.Constant;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class SchedulerService extends Service {
 
         Intent intent = new Intent(this, this.getClass());
         intent.setAction("runScript");
-        mPendingIntent = PendingIntent.getService(this, 0, intent, 0);
+        mPendingIntent = PendingIntent.getService(this, 0, intent, Compat.getImmutableFlags(0));
 
         createNotificationChannel();
         reloadPendingSchedulerList();
@@ -108,34 +109,40 @@ public class SchedulerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if ("runScript".equals(intent.getAction())) {
-            if (mPendingSchedulers.size() > 0 && mScriptManager.getRunningScriptId() == 0) {
-                Scheduler scheduler = mPendingSchedulers.get(0);
-                // 禁用仅执行一次的计划
-                if (scheduler.getRepeat() == 0) {
-                    scheduler.setEnabled(false);
-                    mSchedulerDao.addOrUpdate(scheduler);
-                }
+        String action = intent == null ? null : intent.getAction();
+        if (action != null) {
+            switch (action) {
+                case "runScript":
+                    if (mPendingSchedulers.size() > 0 && mScriptManager.getRunningScriptId() == 0) {
+                        Scheduler scheduler = mPendingSchedulers.get(0);
+                        // 禁用仅执行一次的计划
+                        if (scheduler.getRepeat() == 0) {
+                            scheduler.setEnabled(false);
+                            mSchedulerDao.addOrUpdate(scheduler);
+                        }
 
-                // 切换到计划指定的脚本
-                if (mScriptManager.switchScript(scheduler.getScriptId())) {
-                    mScriptManager.registerScriptListener(mScriptListener);
-                    // 启动目标脚本
-                    ScriptLogger.addLog(getString(R.string.start_scheduler));
-                    if (scheduler.isConfigEnabled()) {
-                        ScriptActuator.getInstance().startScript(scheduler.getConfigName());
-                    } else {
-                        ScriptActuator.getInstance().startScript();
+                        // 切换到计划指定的脚本
+                        if (mScriptManager.switchScript(scheduler.getScriptId())) {
+                            mScriptManager.registerScriptListener(mScriptListener);
+                            // 启动目标脚本
+                            ScriptLogger.addLog(getString(R.string.start_scheduler));
+                            if (scheduler.isConfigEnabled()) {
+                                ScriptActuator.getInstance().startScript(scheduler.getConfigName());
+                            } else {
+                                ScriptActuator.getInstance().startScript();
+                            }
+                        }
+
+                        hideNotification();
+                        // 把当前执行的计划从等待列表中移除
+                        mPendingSchedulers.remove(0);
                     }
-                }
-
-                hideNotification();
-                // 把当前执行的计划从等待列表中移除
-                mPendingSchedulers.remove(0);
+                    break;
+                case "deleteScriptScheduler":
+                    long scriptId = intent.getLongExtra("script_id", 0);
+                    deleteSchedulersByScriptId(scriptId);
+                    break;
             }
-        } else if ("deleteScriptScheduler".equals(intent.getAction())) {
-            long scriptId = intent.getLongExtra("script_id", 0);
-            deleteSchedulersByScriptId(scriptId);
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -182,12 +189,7 @@ public class SchedulerService extends Service {
         }
 
         // 通过计划执行时间对列表中的计划进行排序
-        Collections.sort(mPendingSchedulers, new Comparator<Scheduler>() {
-            @Override
-            public int compare(Scheduler o1, Scheduler o2) {
-                return (int) (o1.getRunTime().getTime() - o2.getRunTime().getTime());
-            }
-        });
+        Collections.sort(mPendingSchedulers, (o1, o2) -> (int) (o1.getRunTime().getTime() - o2.getRunTime().getTime()));
 
         if (mPendingSchedulers.size() > 0) {
             Scheduler scheduler = mPendingSchedulers.get(0);
@@ -225,16 +227,18 @@ public class SchedulerService extends Service {
         builder.setContentText(text);
         builder.setPriority(NotificationCompat.PRIORITY_LOW);
         builder.setAutoCancel(true);
+
         Intent intent = new Intent(this, MainActivity.class);
         intent.setAction("showSchedulers");
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 2, intent, Compat.getImmutableFlags(PendingIntent.FLAG_UPDATE_CURRENT));
+
         builder.setContentIntent(pendingIntent);
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(2, builder.build());
+        manager.notify(Constant.NOTIFICATION_KIND_2, builder.build());
     }
 
     private void hideNotification() {
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.cancel(2);
+        manager.cancel(Constant.NOTIFICATION_KIND_2);
     }
 }

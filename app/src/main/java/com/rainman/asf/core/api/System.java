@@ -30,6 +30,8 @@ import com.rainman.asf.core.ScriptManager;
 import com.rainman.asf.core.database.Script;
 import com.rainman.asf.core.screenshot.PermissionRequesterActivity;
 import com.rainman.asf.core.screenshot.ScreenCapture;
+import com.rainman.asf.util.Compat;
+import com.rainman.asf.util.Constant;
 import com.rainman.asf.util.FileUtil;
 import com.rainman.asf.util.RootUtil;
 import com.rainman.asf.util.SystemUtils;
@@ -98,7 +100,7 @@ public class System {
         Intent intent = new Intent(mContext, MainActivity.class);
         intent.setAction("showLogs");
         intent.putExtra("init_pos", ScriptLogger.getInstance().getLogCount() - 1);
-        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 10 + (int) script.getId(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 10 + (int) script.getId(), intent, Compat.getImmutableFlags(PendingIntent.FLAG_UPDATE_CURRENT));
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext, "ScriptNotification")
                 .setContentTitle(script.getName())
@@ -110,13 +112,13 @@ public class System {
 
         Notification notification = builder.build();
         NotificationManager manager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(10 + (int) script.getId(), notification);
+        manager.notify(Constant.NOTIFICATION_KIND_FOR_SCRIPT + (int) script.getId(), notification);
     }
 
     public void removeNotification() {
         Script script = ScriptManager.getInstance().getCurrentScript();
         NotificationManager manager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.cancel(10 + (int) script.getId());
+        manager.cancel(Constant.NOTIFICATION_KIND_FOR_SCRIPT + (int) script.getId());
     }
 
     public boolean startActivity(String uri) {

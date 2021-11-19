@@ -1,7 +1,7 @@
 package com.rainman.asf.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -78,13 +78,13 @@ public class LogFragment extends BaseFragment {
 
     @Override
     public boolean onMenuItemClick(MenuItem menuItem) {
-        switch (menuItem.getItemId()) {
-            case R.id.action_clear_logs:
-                onClearLogs();
-                return true;
-            case R.id.action_show_scripts:
-                mMainActivity.displayFragment(new ScriptFragment());
-                return true;
+        int itemId = menuItem.getItemId();
+        if (itemId == R.id.action_clear_logs) {
+            onClearLogs();
+            return true;
+        } else if (itemId == R.id.action_show_scripts) {
+            mMainActivity.displayFragment(new ScriptFragment());
+            return true;
         }
         return false;
     }
@@ -93,20 +93,12 @@ public class LogFragment extends BaseFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(mMainActivity);
         builder.setTitle(R.string.clear_logs_confirmation)
                 .setMessage(R.string.clear_logs_confirmation_prompt)
-                .setPositiveButton(R.string.dlg_confirm, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        mLogAdapter.clearAllLogs();
-                        mScriptLogger.clearAllLogs();
-                        dialog.dismiss();
-                    }
+                .setPositiveButton(R.string.dlg_confirm, (dialog, which) -> {
+                    mLogAdapter.clearAllLogs();
+                    mScriptLogger.clearAllLogs();
+                    dialog.dismiss();
                 })
-                .setNegativeButton(R.string.dlg_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
+                .setNegativeButton(R.string.dlg_cancel, (dialog, which) -> dialog.dismiss());
         builder.create().show();
     }
 
@@ -145,6 +137,7 @@ public class LogFragment extends BaseFragment {
             addLog(log);
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         void addLog(ScriptLog log) {
             // 如果当前显示的是最后一页日志，直接往缓存中添加新的记录
             if (mCacheEndPos == mLogTotal) {
@@ -172,6 +165,7 @@ public class LogFragment extends BaseFragment {
             mLogCache = mScriptLogger.queryLogInfo(mCacheStartPos, mCacheEndPos - mCacheStartPos);
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         void initLogData(int initPos) {
             mLogTotal = mScriptLogger.getLogCount();
             if (initPos < 0 || initPos >= mLogTotal) {
@@ -182,20 +176,18 @@ public class LogFragment extends BaseFragment {
             notifyDataSetChanged();
 
             final int finalInitPos = initPos;
-            rvLogView.post(new Runnable() {
-                @Override
-                public void run() {
-                    LinearLayoutManager manager = (LinearLayoutManager) rvLogView.getLayoutManager();
-                    if (manager != null) {
-                        int firstPosition = manager.findFirstVisibleItemPosition();
-                        int lastPosition = manager.findLastVisibleItemPosition();
-                        // 滚动列表让初始条目处于列表倒数第五的位置
-                        rvLogView.scrollToPosition(finalInitPos - (lastPosition - firstPosition) + 5);
-                    }
+            rvLogView.post(() -> {
+                LinearLayoutManager manager = (LinearLayoutManager) rvLogView.getLayoutManager();
+                if (manager != null) {
+                    int firstPosition = manager.findFirstVisibleItemPosition();
+                    int lastPosition = manager.findLastVisibleItemPosition();
+                    // 滚动列表让初始条目处于列表倒数第五的位置
+                    rvLogView.scrollToPosition(finalInitPos - (lastPosition - firstPosition) + 5);
                 }
             });
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         void clearAllLogs() {
             mLogCache.clear();
             mLogTotal = 0;

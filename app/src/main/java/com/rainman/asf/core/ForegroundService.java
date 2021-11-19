@@ -18,6 +18,8 @@ import com.rainman.asf.R;
 import com.rainman.asf.activity.MainActivity;
 import com.rainman.asf.activity.OptionActivity;
 import com.rainman.asf.core.database.Script;
+import com.rainman.asf.util.Compat;
+import com.rainman.asf.util.Constant;
 
 import java.util.Locale;
 import java.util.Timer;
@@ -68,20 +70,27 @@ public class ForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if ("startScript".equals(intent.getAction())) {
-            collapseStatusBar();
-            ScriptActuator.getInstance().startScript();
-        } else if ("stopScript".equals(intent.getAction())) {
-            collapseStatusBar();
-            ScriptActuator.getInstance().stopScript();
-        } else if ("setting".equals(intent.getAction())) {
-            collapseStatusBar();
-            Script script = mScriptManager.getCurrentScript();
-            if (script != null) {
-                Intent intent1 = new Intent(this, OptionActivity.class);
-                intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent1.putExtra("script_id", script.getId());
-                startActivity(intent1);
+        String action = intent == null ? null : intent.getAction();
+        if (action != null) {
+            switch (action) {
+                case "startScript":
+                    collapseStatusBar();
+                    ScriptActuator.getInstance().startScript();
+                    break;
+                case "stopScript":
+                    collapseStatusBar();
+                    ScriptActuator.getInstance().stopScript();
+                    break;
+                case "setting":
+                    collapseStatusBar();
+                    Script script = mScriptManager.getCurrentScript();
+                    if (script != null) {
+                        Intent intent1 = new Intent(this, OptionActivity.class);
+                        intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent1.putExtra("script_id", script.getId());
+                        startActivity(intent1);
+                    }
+                    break;
             }
         }
         return super.onStartCommand(intent, flags, startId);
@@ -151,22 +160,22 @@ public class ForegroundService extends Service {
         builder.setSmallIcon(R.mipmap.ic_launcher);
         builder.setPriority(NotificationCompat.PRIORITY_MIN);
         Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, intent, Compat.getImmutableFlags(PendingIntent.FLAG_UPDATE_CURRENT));
         builder.setContentIntent(pendingIntent);
 
         intent = new Intent(this, ForegroundService.class);
         intent.setAction("startScript");
-        pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        pendingIntent = PendingIntent.getService(this, 0, intent, Compat.getImmutableFlags(PendingIntent.FLAG_UPDATE_CURRENT));
         builder.addAction(R.drawable.ic_start, getString(R.string.start_script), pendingIntent);
 
         intent = new Intent(this, ForegroundService.class);
         intent.setAction("stopScript");
-        pendingIntent = PendingIntent.getService(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        pendingIntent = PendingIntent.getService(this, 1, intent, Compat.getImmutableFlags(PendingIntent.FLAG_UPDATE_CURRENT));
         builder.addAction(R.drawable.ic_stop, getString(R.string.stop_script), pendingIntent);
 
         intent = new Intent(this, ForegroundService.class);
         intent.setAction("setting");
-        pendingIntent = PendingIntent.getService(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        pendingIntent = PendingIntent.getService(this, 2, intent, Compat.getImmutableFlags(PendingIntent.FLAG_UPDATE_CURRENT));
         builder.addAction(R.drawable.ic_script_setting, getString(R.string.script_setting), pendingIntent);
         return builder;
     }
@@ -192,7 +201,7 @@ public class ForegroundService extends Service {
             scriptStatusTip = String.format(getString(R.string.script_state_tip), getString(R.string.script_state_running), getTotalRunningTime());
         }
         mNotificationBuilder.setContentText(scriptStatusTip);
-        startForeground(1, mNotificationBuilder.build());
+        startForeground(Constant.NOTIFICATION_KIND_1, mNotificationBuilder.build());
     }
 
     private void removeNotification() {
@@ -200,6 +209,8 @@ public class ForegroundService extends Service {
     }
 
     private void collapseStatusBar() {
-        sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+        }
     }
 }

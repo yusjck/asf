@@ -58,7 +58,7 @@ epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
 int
 epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
-#if !defined(__NR_epoll_wait) && defined(__NR_epoll_pwait)
+#if defined(__NR_epoll_pwait)
 	return (syscall(__NR_epoll_pwait, epfd, events, maxevents, timeout, NULL, 0));
 #else
 	return (syscall(__NR_epoll_wait, epfd, events, maxevents, timeout));

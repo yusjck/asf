@@ -1,5 +1,6 @@
 package com.rainman.asf.fragment;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,12 +14,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
-import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -107,22 +109,22 @@ public class SchedulerFragment extends BaseFragment {
         return super.onContextItemSelected(item);
     }
 
+    private final ActivityResultLauncher<Intent> mSchedulerActivityLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    mSchedulerAdapter.reloadData();
+                }
+            });
+
     @Override
     public boolean onMenuItemClick(MenuItem menuItem) {
         if (menuItem.getItemId() == R.id.action_add) {
             Intent intent = new Intent(mMainActivity, SchedulerActivity.class);
             intent.putExtra("script_id", mScriptId);
-            startActivityForResult(intent, 0);
+            mSchedulerActivityLauncher.launch(intent);
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == Activity.RESULT_OK) {
-            mSchedulerAdapter.reloadData();
-        }
     }
 
     private void setListAutoUpdate() {
@@ -130,12 +132,7 @@ public class SchedulerFragment extends BaseFragment {
         Calendar calendar = Calendar.getInstance();
         int delayTime = 60 - calendar.get(Calendar.SECOND);
         mSchedulerAdapter.reloadData();
-        rvSchedulerList.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setListAutoUpdate();
-            }
-        }, delayTime * 1000);
+        rvSchedulerList.postDelayed(this::setListAutoUpdate, delayTime * 1000);
     }
 
     private class SchedulerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -159,6 +156,7 @@ public class SchedulerFragment extends BaseFragment {
             return mSchedulerList == null ? 0 : mSchedulerList.size();
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         void reloadData() {
             if (mScriptId != 0) {
                 mSchedulerList = mSchedulerService.getSchedulersByScriptId(mScriptId);
@@ -173,7 +171,7 @@ public class SchedulerFragment extends BaseFragment {
             private final TextView tv_time;
             private final TextView tv_repeat;
             private final TextView tv_script;
-            private final Switch sw_enabled;
+            private final SwitchCompat sw_enabled;
             private Scheduler.SchedulerInfo mScheduler;
 
             ViewHolder(View view) {
@@ -184,25 +182,19 @@ public class SchedulerFragment extends BaseFragment {
                 sw_enabled = view.findViewById(R.id.sw_enabled);
 
                 itemView.setOnCreateContextMenuListener(this);
-                sw_enabled.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (mScheduler.isEnabled() != isChecked) {
-                            mScheduler.setEnabled(isChecked);
-                            mSchedulerService.addOrUpdateScheduler(mScheduler);
-                            updateRepeatDesc();
-                        }
+                sw_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (mScheduler.isEnabled() != isChecked) {
+                        mScheduler.setEnabled(isChecked);
+                        mSchedulerService.addOrUpdateScheduler(mScheduler);
+                        updateRepeatDesc();
                     }
                 });
 
-                itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(mMainActivity, SchedulerActivity.class);
-                        intent.putExtra("script_id", mScriptId);
-                        intent.putExtra("scheduler_id", mScheduler.getId());
-                        startActivityForResult(intent, 0);
-                    }
+                itemView.setOnClickListener(v -> {
+                    Intent intent = new Intent(mMainActivity, SchedulerActivity.class);
+                    intent.putExtra("script_id", mScriptId);
+                    intent.putExtra("scheduler_id", mScheduler.getId());
+                    mSchedulerActivityLauncher.launch(intent);
                 });
             }
 
